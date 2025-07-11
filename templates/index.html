@@ -3,31 +3,42 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DASHBOARD</title>
+  <title>TURBODESK</title>
 
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css"
         rel="stylesheet" crossorigin="anonymous">
 
   <style>
+
     /* ─── актуальные стили ─── */
     .eff-percent { font-size:1.6rem; font-weight:700; }
     .progress    { height:6px; }
     .note        { font-size:0.85rem; color:#6c757d; opacity:0.75; }
+
+    .text-custom {
+      color: #d8d8d8; /* чуть темнее, чем text-light */
+    }
+
+    .select-custom {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23dddddd' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19.5 8.25-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      background-size: 1em;
+      padding-right: 2rem;
+      appearance: none;
+    }
+
   </style>
 </head>
 
-<body class="bg-light">
-  <div class="container py-4">
-    <h1 class="mb-4">TURBORAND DASHBOARD</h1>
-    <h4 class="mb-4"><u>Демо структуры (все показатели вымышлены)</u></h4>
+<body class="bg-dark text-custom">
+  <div class="container-fluid py-5 px-2 px-lg-5" style="max-width:3240px">
+    <div class="d-lg-flex align-items-center flex-wrap gap-4 mb-4">
+      <h1 class="mb-0 text-secondary">TURBODESK</h1>
 
-    <!-- ===== Продажи ===== -->
-    <section class="mb-5">
-      <h3 class="mb-4">Продажи</h3>
-
-      <form method="get" class="mb-3">
-        <label for="period" class="form-label">Период:</label>
-        <select class="form-select w-auto d-inline-block" name="period" id="period" onchange="this.form.submit()">
+      <form method="get" class="mb-0">
+        <label for="period" class="form-label me-2">Период:</label>
+        <select class="form-select d-inline-block w-auto bg-dark text-custom select-custom" name="period" id="period" onchange="this.form.submit()">
           <option value="3m" {% if period == '3m' %}selected{% endif %}>3 месяца</option>
           <option value="1m" {% if period == '1m' %}selected{% endif %}>Месяц</option>
           <option value="1w" {% if period == '1w' %}selected{% endif %}>Неделя</option>
@@ -35,10 +46,19 @@
         </select>
       </form>
 
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+      <h4 class="mb-0">Демо-данные</h4>
+    </div>
+
+    <hr>
+
+    <!-- ===== Продажи ===== -->
+    <section class="mb-5">
+      <h3 class="mb-4 text-center">Продажи</h3>
+
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-6 g-4">
         {% for m in managers %}
         <div class="col">
-          <div class="card h-100 shadow-sm p-3">
+          <div class="card h-100 shadow-sm p-3 bg-light">
 
             <div class="d-flex">
               <img src="{{ m.photo_url }}" alt="{{ m.name }}"
@@ -68,18 +88,20 @@
             <div class="progress my-2">
               <div class="progress-bar {{ m.bar_class }}" style="width:{{ m.eff }}%;"></div>
             </div>
-            <p class="note text-center">Показатели вымышленные</p>
+            <p class="note text-center">демо-данные</p>
           </div>
         </div>
         {% endfor %}
       </div>
     </section>
 
+    <hr>
+
     <!-- ===== Снабжение ===== -->
     <section>
-      <h3 class="mb-4">Снабжение</h3>
+      <h3 class="mb-4 text-center">Снабжение</h3>
 
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-4">
+      <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-6 g-4">
         {% for m in supplies %}
         <div class="col">
           <div class="card h-100 shadow-sm p-3">
