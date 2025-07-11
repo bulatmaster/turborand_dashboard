@@ -14,22 +14,19 @@ conn.row_factory = sqlite3.Row
 # --- Вспомогательные функции ---
 def color_class(eff: int) -> str:
     if eff >= 80:
-        return "text-success"
+        return "text-success"   # зелёный
     elif eff >= 50:
-        return "text-warning"
-    elif eff >= 30:
-        return "text-orange"
-    return "text-danger"
+        return "text-warning"   # жёлтый
+    return "text-danger"        # красный
+
 
 
 def bar_class(eff: int) -> str:
     if eff >= 80:
-        return "bg-success"
+        return "bg-success"     # зелёный
     elif eff >= 50:
-        return "bg-warning"
-    elif eff >= 30:
-        return "bg-orange"
-    return "bg-danger"
+        return "bg-warning"     # жёлтый
+    return "bg-danger"          # красный
 
 
 def format_money(amount: int) -> str:
