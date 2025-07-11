@@ -1,27 +1,25 @@
-import sqlite3 
-from random import randint
-import random 
+import sqlite3
+import random
+from typing import List, Dict
 
-from flask import Flask, render_template, url_for
-
-
-
+from flask import Flask, render_template, url_for, request   
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
+# Подключение к базе
 conn = sqlite3.connect('database.db', check_same_thread=False)
 conn.row_factory = sqlite3.Row
 
 
+# --- Вспомогательные функции ---
 def color_class(eff: int) -> str:
     if eff >= 80:
-        return "text-success"     # зелёный (Bootstrap)
+        return "text-success"
     elif eff >= 50:
-        return "text-warning"     # жёлтый
+        return "text-warning"
     elif eff >= 30:
-        return "text-orange"      # добавим свой
-    else:
-        return "text-danger"      # красный
+        return "text-orange"
+    return "text-danger"
 
 
 def bar_class(eff: int) -> str:
@@ -31,50 +29,69 @@ def bar_class(eff: int) -> str:
         return "bg-warning"
     elif eff >= 30:
         return "bg-orange"
-    else:
-        return "bg-danger"
+    return "bg-danger"
 
 
+def format_money(amount: int) -> str:
+    return f"{amount:,}".replace(",", " ") + " ₽"
+
+
+def build_manager_data(row, default_avatar: str) -> Dict:
+    eff = random.randint(20, 100)
+    return {
+        'name': row['name'],
+        'photo_url': row['photo_url'] or default_avatar,
+        'eff': eff,
+        'eff_class': color_class(eff),
+        'bar_class': bar_class(eff),
+        'kp_count': random.randint(0, 60),
+        'calls_minutes': random.randint(0, 1800),
+        'trips_count': random.randint(0, 13),
+        'success_deals': random.randint(0, 7),
+        'advances_rub': format_money(random.randint(0, 6_000_000)),
+        'profit_rub': format_money(random.randint(0, 6_000_000)),
+    }
+
+
+def build_supply_data(row, default_avatar: str) -> Dict:
+    eff = random.randint(1, 100)
+    return {
+        'name': row['name'],
+        'photo_url': row['photo_url'] or default_avatar,
+        'eff': eff,
+        'eff_class': color_class(eff),
+        'bar_class': bar_class(eff),
+        'stat1': random.randint(1, 200),
+        'stat2': random.randint(200, 1000),
+    }
+
+
+# --- Маршруты ---
 @app.route('/')
 def index():
+    tv_mode = request.args.get('view', '') == 'tv'   
+
     default_avatar = url_for('static', filename='default_avatar.jpg')
 
     db_managers = conn.execute('SELECT * FROM users WHERE is_sales = 1').fetchall()
-    managers = []
-    for db_man in db_managers:
-
-        eff = randint(20, 100)
-
-
-        profit = random.randint(0, 1_000_000)
-        managers.append({
-            'name': db_man['name'],
-            'photo_url': db_man['photo_url'] if db_man['photo_url'] else default_avatar,
-            'eff': eff,
-            'eff_class': color_class(eff),
-            'bar_class': bar_class(eff),
-            'kp_count': randint(2, 100),
-            'calls_count': randint(20, 500),
-            'success_deals': randint(0, 50),
-            'profit_money': f"{profit:,}".replace(",", " ") + " ₽"
-        })
-    
-    supplies = []
     db_supplies = conn.execute('SELECT * FROM users WHERE is_supply = 1').fetchall()
-    for db_man in db_supplies:
-        eff = randint(1, 100)
-        supplies.append({
-            'name': db_man['name'],
-            'photo_url': db_man['photo_url'] if db_man['photo_url'] else default_avatar,
-            'eff': eff,
-            'eff_class': color_class(eff),
-            'bar_class': bar_class(eff),
-            'stat1': randint(1, 200),
-            'stat2': randint(200, 1000),
-        })
-    
-    return render_template('index.html', managers=managers, supplies=supplies)
 
+    managers: List[Dict] = [build_manager_data(row, default_avatar) for row in db_managers]
+    supplies: List[Dict] = [build_supply_data(row, default_avatar) for row in db_supplies]
+
+    ratio = max(2, min(6, round(len(managers) / max(1, len(supplies)))))
+    sales_frac = ratio                     # передаём в шаблон
+
+    return render_template(
+        'index.html',
+        managers=managers,
+        supplies=supplies,
+        tv_mode=tv_mode,
+        sales_frac=sales_frac,
+        auto_refresh=600  # seconds
+    )
+
+
+# --- Запуск ---
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=3389, debug=True)
-    
