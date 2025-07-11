@@ -2,7 +2,7 @@ import sqlite3
 import random
 from typing import List, Dict
 
-from flask import Flask, render_template, url_for, request   
+from flask import Flask, render_template, url_for
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
@@ -69,8 +69,6 @@ def build_supply_data(row, default_avatar: str) -> Dict:
 # --- Маршруты ---
 @app.route('/')
 def index():
-    tv_mode = request.args.get('view', '') == 'tv'   
-
     default_avatar = url_for('static', filename='default_avatar.jpg')
 
     db_managers = conn.execute('SELECT * FROM users WHERE is_sales = 1').fetchall()
@@ -79,17 +77,7 @@ def index():
     managers: List[Dict] = [build_manager_data(row, default_avatar) for row in db_managers]
     supplies: List[Dict] = [build_supply_data(row, default_avatar) for row in db_supplies]
 
-    ratio = max(2, min(6, round(len(managers) / max(1, len(supplies)))))
-    sales_frac = ratio                     # передаём в шаблон
-
-    return render_template(
-        'index.html',
-        managers=managers,
-        supplies=supplies,
-        tv_mode=tv_mode,
-        sales_frac=sales_frac,
-        auto_refresh=600  # seconds
-    )
+    return render_template('index.html', managers=managers, supplies=supplies)
 
 
 # --- Запуск ---
