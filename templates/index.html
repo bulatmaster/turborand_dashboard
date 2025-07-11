@@ -12,7 +12,6 @@
 
     /* ─── актуальные стили ─── */
     .eff-percent { font-size:1.6rem; font-weight:700; }
-    .progress    { height:6px; }
     .note        { font-size:0.85rem; color:#6c757d; opacity:0.75; }
 
     .text-custom {
@@ -26,6 +25,22 @@
       background-size: 1em;
       padding-right: 2rem;
       appearance: none;
+    }
+
+    .progress       { position:relative; height:28px; }
+    .progress-bar   { height:100%;        /* как было */ }
+
+    .progress-label { /* общий слой над полосой */
+      position:absolute; inset:0;
+      display:flex; align-items:center; justify-content:center;
+      font-size:.9rem;   /* можно подстроить */
+      color:#000;                         /* всегда чёрный */
+      pointer-events:none;                /* клики проходят сквозь */
+    }
+
+    .progress-label.badge-style {
+      padding:.15rem .4rem;
+      border-radius:.25rem;
     }
 
   </style>
@@ -78,14 +93,20 @@
 
             <hr class="my-2">
 
-            <div class="text-center small">
-              <div>КП: <strong>{{ m.kp_count }}</strong></div>
-              <div>Звонки (мин): <strong>{{ m.calls_minutes }}</strong></div>
-              <div>Командировок: <strong>{{ m.trips_count }}</strong></div>
-              <div>Договоров: <strong>{{ m.success_deals }}</strong></div>
-              <div>Авансы: <strong>{{ m.advances_rub }}</strong></div>
-              <div>Прибыль: <strong>{{ m.profit_rub }}</strong></div>
-            </div>
+            {% for label, p in m.metrics.items() %}
+              <div class="mb-2">
+                <div class="progress">
+                  <div class="progress-bar {{ p.css }}"
+                      style="width: {{ p.percent }}%;">
+                    <span class="progress-label badge-style">
+                      <!-- {{ label }}: {{ p.val | int }} / {{ p.plan | int }} -->
+                      {{ label }}:&nbsp;
+                       <span class="fw-semibold"> {{ p.val | int }}</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
 
             
             <p class="note text-center">демо-данные</p>
