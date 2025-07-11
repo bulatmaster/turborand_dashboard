@@ -67,10 +67,12 @@
                 <h5 class="mb-1">{{ m.name }}</h5>
                 <p class="text-muted mb-2 small">{{ m.position }}</p>
 
-                <p class="mb-2">
                   Эффективность:
                   <span class="eff-percent {{ m.eff_class }}">{{ m.eff }} %</span>
-                </p>
+
+                <div class="progress my-2">
+                  <div class="progress-bar {{ m.bar_class }}" style="width:{{ m.eff }}%;"></div>
+                </div>
               </div>
             </div>
 
@@ -85,9 +87,7 @@
               <div>Прибыль: <strong>{{ m.profit_rub }}</strong></div>
             </div>
 
-            <div class="progress my-2">
-              <div class="progress-bar {{ m.bar_class }}" style="width:{{ m.eff }}%;"></div>
-            </div>
+            
             <p class="note text-center">демо-данные</p>
           </div>
         </div>

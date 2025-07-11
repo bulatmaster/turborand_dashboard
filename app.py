@@ -37,6 +37,7 @@ def build_manager_data(row, default_avatar: str) -> Dict:
     eff = random.randint(20, 100)
     return {
         'name': row['name'],
+        'position': random.choice(['Стажер ', 'Младший менеджер', 'Менеджер по продажам', 'Ведущий менеджер по продажам']),
         'photo_url': row['photo_url'] or default_avatar,
         'eff': eff,
         'eff_class': color_class(eff),
