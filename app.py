@@ -1,83 +1,100 @@
-import sqlite3
-import random
+import sqlite3, random
 from typing import List, Dict
 from flask import Flask, render_template, url_for
 
 app = Flask(__name__, template_folder='templates', static_folder='static')
 
-# ─── подключение к БД ─────────────────────────────────────────────────────────
+# ─── подключение к БД ────────────────────────────────────────────────────────
 conn = sqlite3.connect('database.db', check_same_thread=False)
 conn.row_factory = sqlite3.Row
 
-# ─── планы по метрикам ────────────────────────────────────────────────────────
+# ─── планы ───────────────────────────────────────────────────────────────────
 BASE_PLANS = {
-    "КП":            40,
-    "Звонки, мин":  1200,
-    "Командировки":  10,
-    "Договоры":       5,
-    "Авансы":   4_000_000,
+    "КП":             40,
+    "Звонки, мин":   1200,
+    "Командировки":   10,
+    "Договоры":        5,
+    "Авансы":    4_000_000,
 }
 
 POSITION_PROFIT_PLAN = {
-    "Стажер":                     250_000,
-    "Младший менеджер":           850_000,
-    "Менеджер по продажам":     2_500_000,
+    "Стажер":                       250_000,
+    "Младший менеджер":             850_000,
+    "Менеджер по продажам":       2_500_000,
     "Ведущий менеджер по продажам": 5_000_000,
 }
 POSITIONS = list(POSITION_PROFIT_PLAN.keys())
 
-# ─── вспомогательные функции ──────────────────────────────────────────────────
-def css_zone_by_percent(pct: float) -> str:
-    if pct < 50:
-        return "bg-danger"
-    elif pct < 100:
-        return "bg-warning"
-    return "bg-success"
+# ─── окрашивание шкал по правилам ────────────────────────────────────────────
+def css_by_metric(label: str, value: int | float) -> str:
+    if label == "КП":
+        if value <= 9:   return "bg-secondary"
+        if value <= 19:  return "bg-danger"
+        if value <= 29:  return "bg-warning"
+        return "bg-success"
 
+    if label == "Звонки, мин":
+        if value <= 299:  return "bg-secondary"
+        if value <= 599:  return "bg-danger"
+        if value <= 899:  return "bg-warning"
+        return "bg-success"
+
+    if label == "Командировки":
+        if value <= 3:   return "bg-danger"
+        if value <= 8:   return "bg-warning"
+        return "bg-success"
+
+    if label == "Договоры":
+        if value <= 1:   return "bg-danger"
+        if value <= 3:   return "bg-warning"
+        return "bg-success"
+
+    if label == "Авансы":
+        if value < 1_000_000:   return "bg-danger"
+        if value < 3_000_000:   return "bg-warning"
+        return "bg-success"
+
+    if label == "Прибыль":          # одинаковые пороги для всех позиций
+        if value <  50_000:  return "bg-secondary"
+        if value < 100_000:  return "bg-danger"
+        if value < 200_000:  return "bg-warning"
+        return "bg-success"
+
+    return "bg-secondary"
+
+# ─── прочие утилиты ──────────────────────────────────────────────────────────
 def human_int(val: int | float) -> str:
     return f"{int(val):,}".replace(",", " ")
 
-def progress_info(label: str, value: int | float, plan: int, money: bool = False) -> Dict:
-    percent = min(100, round(value / plan * 100, 1))
-    css     = css_zone_by_percent(percent)
+def progress_info(label: str, value: int | float, plan: int, money: bool=False) -> Dict:
+    percent = min(100, round(value / plan * 100, 1))  # ширина полосы
+    css     = css_by_metric(label, value)             # цвет полосы
 
+    txt = f"{label}:&nbsp;<span class='fw-semibold'>{human_int(value)}</span>"
     if money:
-        txt = (f"{label}:&nbsp;"
-            f"<span class='fw-semibold'>{human_int(value)}</span>&nbsp;₽")
-    else:
-        txt = f"{label}:&nbsp;<span class='fw-semibold'>{human_int(value)}</span>"
+        txt += "&nbsp;₽"
 
-
-    return {
-        "display": txt,   # помечаем как безопасный HTML
-        "percent": percent,
-        "css": css,
-    }
+    return {"display": txt, "percent": percent, "css": css}
 
 def color_class(eff: int) -> str:
-    if eff >= 80:
-        return "text-success"
-    elif eff >= 50:
-        return "text-warning"
+    if eff >= 80: return "text-success"
+    if eff >= 50: return "text-warning"
     return "text-danger"
 
 def bar_class(eff: int) -> str:
-    if eff >= 80:
-        return "bg-success"
-    elif eff >= 50:
-        return "bg-warning"
+    if eff >= 80: return "bg-success"
+    if eff >= 50: return "bg-warning"
     return "bg-danger"
 
-# ─── данные менеджеров продаж ────────────────────────────────────────────────
+# ─── данные менеджеров ───────────────────────────────────────────────────────
 def build_manager_data(row, avatar: str) -> Dict:
-    # демо-данные
-    kp, calls, trips, deals = random.randint(0, 60), random.randint(0, 1800), \
-                              random.randint(0, 13), random.randint(0, 7)
-    advances = random.randint(0, 6_000_000)
+    kp, calls, trips, deals  = random.randint(0, 60), random.randint(0, 1800), \
+                               random.randint(0, 13), random.randint(0, 7)
+    advances   = random.randint(0, 6_000_000)
 
-    position   = random.choice(POSITIONS)
+    position    = random.choice(POSITIONS)
     profit_plan = POSITION_PROFIT_PLAN[position]
-    profit     = random.randint(0, profit_plan * 2)
+    profit      = random.randint(0, profit_plan * 2)
 
     metrics = [
         progress_info("КП",            kp,      BASE_PLANS["КП"]),
@@ -99,21 +116,16 @@ def build_manager_data(row, avatar: str) -> Dict:
         "metrics": metrics,
     }
 
-# ─── данные сотрудников снабжения ─────────────────────────────────────────────
+# ─── данные снабженцев (без изменений) ───────────────────────────────────────
 def build_supply_data(row, avatar: str) -> Dict:
     eff = random.randint(1, 100)
 
-    calc_total = random.randint(5, 30)
-    calc_done  = random.randint(0, calc_total)
-
-    percent = calc_done / calc_total * 100 if calc_total else 0
-    css = css_zone_by_percent(percent)
-    txt = f"Посчитано:&nbsp;<span class='fw-semibold'>{calc_done}</span>&nbsp;/&nbsp;<span class='fw-semibold'>{calc_total}</span>"
-    calc_metric = {
-        "display": txt,
-        "percent": min(100, round(percent, 1)),
-        "css": css,
-    }
+    total = random.randint(5, 30)
+    done  = random.randint(0, total)
+    percent = done / total * 100 if total else 0
+    css  = "bg-success" if percent >= 100 else \
+           "bg-warning" if percent >= 50 else "bg-danger"
+    txt  = f"Посчитано:&nbsp;<span class='fw-semibold'>{done}</span>&nbsp;/&nbsp;<span class='fw-semibold'>{total}</span>"
 
     return {
         "name": row["name"],
@@ -121,19 +133,17 @@ def build_supply_data(row, avatar: str) -> Dict:
         "eff": eff,
         "eff_class": color_class(eff),
         "bar_class": bar_class(eff),
-        "calc": calc_metric,
+        "calc": {"display": txt, "percent": round(min(percent, 100), 1), "css": css},
     }
 
 # ─── маршруты ────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
-    avatar = url_for("static", filename="default_avatar.jpg")
-    db_managers = conn.execute("SELECT * FROM users WHERE is_sales = 1").fetchall()
-    db_supplies = conn.execute("SELECT * FROM users WHERE is_supply = 1").fetchall()
-
-    managers: List[Dict] = [build_manager_data(r, avatar) for r in db_managers]
-    supplies: List[Dict] = [build_supply_data(r, avatar) for r in db_supplies]
-
+    avatar   = url_for("static", filename="default_avatar.jpg")
+    managers = [build_manager_data(r, avatar) for r
+                in conn.execute("SELECT * FROM users WHERE is_sales = 1")]
+    supplies = [build_supply_data(r, avatar) for r
+                in conn.execute("SELECT * FROM users WHERE is_supply = 1")]
     return render_template("index.html", managers=managers, supplies=supplies)
 
 # ─── запуск ───────────────────────────────────────────────────────────────────

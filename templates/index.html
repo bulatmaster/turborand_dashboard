@@ -9,25 +9,23 @@
         rel="stylesheet" crossorigin="anonymous">
 
   <style>
-    /* ─── актуальные стили ─── */
-    .eff-percent { font-size:1.6rem; font-weight:700; }
-    .note        { font-size:0.85rem; color:#6c757d; opacity:0.75; }
-
-    .text-custom { color:#d8d8d8; }
+    .eff-percent {font-size:1.6rem;font-weight:700}
+    .note{font-size:.85rem;color:#6c757d;opacity:.75}
+    .text-custom{color:#d8d8d8}
 
     .select-custom{
       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23dddddd' stroke-width='1.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='m19.5 8.25-7.5 7.5-7.5-7.5'/%3E%3C/svg%3E");
-      background-repeat:no-repeat;background-position:right 0.75rem center;
-      background-size:1em;padding-right:2rem;appearance:none;
+      background-repeat:no-repeat;background-position:right .75rem center;
+      background-size:1em;padding-right:2rem;appearance:none
     }
 
-    .progress{position:relative;height:28px;}
-    .progress-bar{height:100%;}
+    .progress{position:relative;height:28px}
+    .progress-bar{height:100%}
     .progress-label{
       position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
-      font-size:.9rem;color:#000;pointer-events:none;
+      font-size:.9rem;color:#000;pointer-events:none
     }
-    .progress-label.badge-style{padding:.15rem .4rem;border-radius:.25rem;}
+    .progress-label.badge-style{padding:.15rem .4rem;border-radius:.25rem}
   </style>
 </head>
 
@@ -37,16 +35,15 @@
   <div class="d-lg-flex align-items-center flex-wrap gap-4 mb-4">
     <h1 class="mb-0 text-secondary">TURBODESK</h1>
 
-    <form method="get" class="mb-0">
-      <label for="period" class="form-label me-2">Период:</label>
-      <select class="form-select d-inline-block w-auto bg-dark text-custom select-custom"
-              name="period" id="period" onchange="this.form.submit()">
-        <option value="3m" {% if period == '3m' %}selected{% endif %}>3 месяца</option>
-        <option value="1m" {% if period == '1m' %}selected{% endif %}>Месяц</option>
-        <option value="1w" {% if period == '1w' %}selected{% endif %}>Неделя</option>
-        <option value="3d" {% if period == '3d' %}selected{% endif %}>3 дня</option>
-      </select>
-    </form>
+    <!-- упрощённый выбор периода -->
+    <select class="form-select d-inline-block w-auto bg-dark text-custom select-custom">
+      <option selected>июль 2025</option>
+      <option>июнь 2025</option>
+      <option>май 2025</option>
+      <option>апрель 2025</option>
+      <option>март 2025</option>
+      <option>февраль 2025</option>
+    </select>
 
     <h4 class="mb-0">Демо-данные</h4>
   </div>
@@ -68,11 +65,8 @@
             <div class="flex-grow-1">
               <h5 class="mb-1">{{ m.name }}</h5>
               <p class="text-muted mb-2 small">{{ m.position }}</p>
-
               Эффективность:
               <span class="eff-percent {{ m.eff_class }}">{{ m.eff }} %</span>
-
-              
             </div>
           </div>
 
@@ -106,13 +100,11 @@
       {% for m in supplies %}
       <div class="col">
         <div class="card h-100 shadow-sm p-3">
-
           <div class="d-flex">
             <img src="{{ m.photo_url }}" alt="{{ m.name }}"
                  class="rounded me-3" style="width:110px;height:110px;object-fit:cover">
             <div class="flex-grow-1">
               <h5 class="mb-1">{{ m.name }}</h5>
-
               <p class="mb-2">
                 Эффективность:
                 <span class="eff-percent {{ m.eff_class }}">{{ m.eff }} %</span>
@@ -120,7 +112,6 @@
             </div>
           </div>
 
-          <!-- новый индикатор «Посчитано» -->
           <div class="progress my-2">
             <div class="progress-bar {{ m.calc.css }}"
                  style="width: {{ m.calc.percent }}%;">
