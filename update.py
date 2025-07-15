@@ -20,7 +20,7 @@ def main():
             update_payments()
             update_stage_history()
             update_trips()
-            update_users ()
+            update_users()
         except Exception as e:
             emergency_report(f'turbodesk updater: {e.__class__.__name__}: {e}')
             logging.exception(e)
