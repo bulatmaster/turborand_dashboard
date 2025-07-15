@@ -45,6 +45,7 @@ def update_deals():
             stage_semantic_id = deal['STAGE_SEMANTIC_ID']
             opportunity = money_to_int(deal['OPPORTUNITY'])
             profit = money_to_int(deal['UF_CRM_1745583203057'])
+            date_modify = deal['DATE_MODIFY']
 
             if deal_id in deals_db:
                 with conn:
@@ -68,6 +69,7 @@ def update_deals():
                             stage_semantic_id, 
                             opportunity, 
                             profit,
+                            date_modify,
                             deal_id
                         )
                     )
@@ -83,8 +85,9 @@ def update_deals():
                             stage_id, 
                             stage_semantic_id, 
                             opportunity, 
-                            profit
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                            profit,
+                            date_modify
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """, (deal_id, 
                               sales_user_id, 
                               supply_user_id, 
@@ -92,7 +95,8 @@ def update_deals():
                               stage_id, 
                               stage_semantic_id, 
                               opportunity, 
-                              profit)
+                              profit, 
+                              date_modify)
                     )
             
         

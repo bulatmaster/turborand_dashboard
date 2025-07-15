@@ -45,6 +45,7 @@ def update_payments():
                     INSERT INTO payments 
                     (id, deal_id, amount, payment_time, payment_type) 
                     VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT DO NOTHING
                     """, to_insert
                 )
         
