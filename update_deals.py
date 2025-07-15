@@ -15,9 +15,10 @@ def update_deals():
     start = 0
 
     while True:
+
         r = requests.get(request_url, {
             'order[DATE_MODIFY]': 'ASC',
-            'filter[>DATE_MODIFY]': '2025-04-23T14:12:50+00:00',
+            #'filter[>DATE_MODIFY]': '2025-04-23T14:12:50+00:00',
             'start': start
         })
 
@@ -27,14 +28,17 @@ def update_deals():
         if data['total'] - start <= MAX_PER_PAGE:
             break 
         
+        print(f'{start} / {data["total"]}')
+        
         start += 50
 
-        for deal in 
+
+        
         
     
 
 def main():
-    update_managers()
+    update_deals()
 
 
 if __name__ == "__main__":
