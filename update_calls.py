@@ -40,7 +40,10 @@ def update_calls():
             with conn:
                 conn.executemany(
                     """
-                    INSERT INTO calls (id, user_id, duration, start_time) VALUES (?, ?, ?, ?)
+                    INSERT INTO calls 
+                    (id, user_id, duration, start_time) VALUES 
+                    (?, ?, ?, ?)
+                    ON CONFLICT DO NOTHING
                     """, to_insert
                 )
         

@@ -43,6 +43,7 @@ def update_trips():
                     INSERT INTO trips 
                     (id, user_id, stage_id, begin_time, end_time) 
                     VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT DO NOTHING
                     """, to_insert
                 )
         

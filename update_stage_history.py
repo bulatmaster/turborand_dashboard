@@ -48,6 +48,7 @@ def update_stage_history():
                     INSERT INTO deals_stage_history 
                     (id, deal_id, pipeline_id, stage_id, stage_semantic_id, record_time) 
                     VALUES (?, ?, ?, ?, ?, ?)
+                    ON CONFLICT DO NOTHING
                     """, to_insert
                 )
         
