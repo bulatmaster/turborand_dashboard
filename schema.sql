@@ -16,7 +16,8 @@ CREATE TABLE deals (
     sales_user_id INTEGER,
     supply_user_id INTEGER,
     pipeline_id INTEGER,
-    stage_id INTEGER,
+    stage_id TEXT,
+    stage_semantic_id TEXT,
     opportunity INTEGER,
     profit INTEGER
 );
@@ -24,14 +25,21 @@ CREATE TABLE payments (
     id INTEGER PRIMARY KEY,
     deal_id INTEGER,
     amount INTEGER,
-    payment_date INTEGER,
+    payment_time INTEGER,
     payment_type TEXT
 );
 CREATE TABLE deals_stage_history (
     id INTEGER PRIMARY KEY,
     deal_id INTEGER,
     pipeline_id INTEGER,
-    stage_id INTEGER,
-    stage_semantic_id INTEGER,
+    stage_id TEXT,
+    stage_semantic_id TEXT,
     record_time TEXT
 );
+CREATE TABLE trips (
+    id INTEGER PRIMARY KEY,
+    user_id INTEGER,
+    stage_id TEXT,
+    begin_time TEXT,
+    end_time TEXT
+)
