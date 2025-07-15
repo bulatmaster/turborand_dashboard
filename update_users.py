@@ -3,16 +3,20 @@ import requests
 
 import config 
 from config import BX_WEBHOOK_URL
+import db 
 
-conn = sqlite3.connect('database.db')
-conn.row_factory = sqlite3.Row
 
-def update_managers():
+conn = db.get_conn()
+
+
+def update_users():
     request_url = f'{BX_WEBHOOK_URL}/user.get'
+
     r = requests.get(request_url, {
         'FILTER[ACTIVE]': True
     })
     data = r.json()
+
     for user in data['result']:
         user_id = user['ID']
 
@@ -32,19 +36,18 @@ def update_managers():
             if str(dep_id) == str(config.SUPPLY_DEP_ID):
                 is_supply = True
 
+        date_register = user['DATE_REGISTER']
+
         with conn:
             conn.execute(
                 """
                 INSERT OR IGNORE INTO users 
-                (id, name, photo_url, is_sales, is_supply)
-                VALUES (?, ?, ?, ?, ?)
-                """, (user_id, name, photo_url, is_sales, is_supply)
+                (id, name, photo_url, is_sales, is_supply, date_register)
+                VALUES (?, ?, ?, ?, ?, ?)
+                """, (user_id, name, photo_url, is_sales, is_supply, date_register)
             )
 
 
-def main():
-    update_managers()
-
 
 if __name__ == "__main__":
-    main()
+    update_users()

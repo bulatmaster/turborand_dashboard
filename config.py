@@ -4,6 +4,11 @@ import dotenv
 dotenv.load_dotenv(override=True)
 
 
+# TG Error Notitications 
+EMERGENCY_BOT_TOKEN = getenv('EMERGENCY_BOT_TOKEN')
+EMERGENCY_CONTACT_IDS = [5309563931]  # @bulatmaster 
+
+
 BX_WEBHOOK_URL = getenv('BX_WEBHOOK_URL')
 
 SALES_DEP_ID = 54  # ID  отдела продаж

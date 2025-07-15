@@ -3,7 +3,8 @@ CREATE TABLE users (
     name TEXT,
     photo_url TEXT,
     is_sales INTEGER DEFAULT 0,
-    is_supply INTEGER DEFAULT 0
+    is_supply INTEGER DEFAULT 0,
+    date_register TEXT
 );
 CREATE TABLE calls (
     id INTEGER PRIMARY KEY,
@@ -20,6 +21,7 @@ CREATE TABLE deals (
     stage_semantic_id TEXT,
     opportunity INTEGER,
     profit INTEGER
+    date_modify TEXT
 );
 CREATE TABLE payments (
     id INTEGER PRIMARY KEY,
@@ -41,5 +43,6 @@ CREATE TABLE trips (
     user_id INTEGER,
     stage_id TEXT,
     begin_time TEXT,
-    end_time TEXT
-)
+    end_time TEXT,
+    date_modify TEXT
+);

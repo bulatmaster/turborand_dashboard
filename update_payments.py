@@ -3,6 +3,7 @@ import requests
 
 import config 
 import db 
+from utils import money_to_int
 
 
 conn = db.get_conn()
@@ -31,7 +32,7 @@ def update_payments():
         for payment in data['result']['items']:
             payment_id = payment['id']
             deal_id = payment['ufCrm23Iddeal']
-            amount = payment['ufCrm23Summa']
+            amount = money_to_int(payment['ufCrm23Summa'])
             payment_time = payment['ufCrm23Data']
             payment_type = payment['ufCrm23Kpalteg']
 
