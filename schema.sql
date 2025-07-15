@@ -20,7 +20,7 @@ CREATE TABLE deals (
     stage_id TEXT,
     stage_semantic_id TEXT,
     opportunity INTEGER,
-    profit INTEGER
+    profit INTEGER,
     date_modify TEXT
 );
 CREATE TABLE payments (
