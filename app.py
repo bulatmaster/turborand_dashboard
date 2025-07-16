@@ -100,8 +100,8 @@ def build_manager_data(user: sqlite3.Row, avatar: str) -> Dict:
 
     ################
     user_id = user['id']
-    START_DATE = '2025-06-01'  # Сделать динамически 
-    END_DATE = '2025-06-31'
+    START_DATE = '2025-06-16'  # Сделать динамически 
+    END_DATE = '2025-07-16'
 
     kp = 0
     kp_sent_dealchanges = conn.execute(

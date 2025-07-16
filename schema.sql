@@ -26,8 +26,10 @@ CREATE TABLE deals (
 CREATE TABLE deals_stage_history (
     id INTEGER PRIMARY KEY,
     deal_id INTEGER,
-    pipeline_id INTEGER,
-    stage_id TEXT,
+    old_pipeline_id INTEGER,
+    new_pipeline_id INTEGER,
+    old_stage_id TEXT,
+    new_stage_id TEXT,
     stage_semantic_id TEXT,
     record_time TEXT
 );
