@@ -23,13 +23,6 @@ CREATE TABLE deals (
     profit INTEGER,
     date_modify TEXT
 );
-CREATE TABLE payments (
-    id INTEGER PRIMARY KEY,
-    deal_id INTEGER,
-    amount INTEGER,
-    payment_time INTEGER,
-    payment_type TEXT
-);
 CREATE TABLE deals_stage_history (
     id INTEGER PRIMARY KEY,
     deal_id INTEGER,
@@ -37,6 +30,13 @@ CREATE TABLE deals_stage_history (
     stage_id TEXT,
     stage_semantic_id TEXT,
     record_time TEXT
+);
+CREATE TABLE payments (
+    id INTEGER PRIMARY KEY,
+    deal_id INTEGER,
+    amount INTEGER,
+    payment_time INTEGER,
+    payment_type TEXT
 );
 CREATE TABLE trips (
     id INTEGER PRIMARY KEY,
