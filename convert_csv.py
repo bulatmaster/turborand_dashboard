@@ -4,6 +4,10 @@ from datetime import datetime
 from typing import Optional, Dict
 import phpserialize                       # pip install phpserialize
 
+
+def convert_date_format(date_str: str) -> str:
+    return datetime.strptime(date_str, "%d.%m.%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+
 # ── вспомогательные ────────────────────────────────────────────────────────
 _stage_prefix = re.compile(r"^C(\d+):")
 
@@ -41,7 +45,11 @@ def parse_event_line(row: Dict[str, str]) -> Dict[str, Optional[object]]:
         }
     """
     deal_id     = int(row["ASSOCIATED_ENTITY_ID"])
-    record_date = row["CREATED"]
+    try:
+        record_date = convert_date_format(row["CREATED"])
+    except ValueError:
+        record_date = row["CREATED"]
+        
     settings_raw = row["SETTINGS"]
 
     result = {
