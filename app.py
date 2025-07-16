@@ -1,4 +1,5 @@
 import sqlite3, random
+from datetime import datetime, timezone
 from typing import List, Dict
 from flask import Flask, render_template, url_for
 
@@ -87,6 +88,22 @@ def bar_class(eff: int) -> str:
     if eff >= 50: return "bg-warning"
     return "bg-danger"
 
+
+def get_manager_position(start_date_str):
+    start_date = datetime.fromisoformat(start_date_str)
+    now = datetime.now(timezone.utc)
+    months_passed = (now.year - start_date.year) * 12 + now.month - start_date.month
+
+    if months_passed < 4:
+        return "Стажер"
+    elif months_passed < 7:
+        return "Младший менеджер"
+    elif months_passed <= 12:
+        return "Менеджер по продажам"
+    else:
+        return "Ведущий менеджер по продажам"
+    
+
 # ─── данные менеджеров ───────────────────────────────────────────────────────
 def build_manager_data(user: sqlite3.Row, avatar: str) -> Dict:
     kp, calls_seconds, trips, dealchanges  = random.randint(0, 60), random.randint(0, 1800), \
@@ -97,9 +114,13 @@ def build_manager_data(user: sqlite3.Row, avatar: str) -> Dict:
     profit_plan = POSITION_PROFIT_PLAN[position]
     profit      = random.randint(0, profit_plan * 2)
 
+    
+    
 
     ################
     user_id = user['id']
+    position = get_manager_position(user['date_register'])
+    
     START_DATE = '2025-06-16'  # Сделать динамически 
     END_DATE = '2025-07-17'
 
