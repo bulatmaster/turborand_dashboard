@@ -101,37 +101,17 @@ def build_manager_data(user: sqlite3.Row, avatar: str) -> Dict:
     ################
     user_id = user['id']
     START_DATE = '2025-06-16'  # Сделать динамически 
-    END_DATE = '2025-07-16'
+    END_DATE = '2025-07-17'
 
-    kp = 0
-    kp_sent_dealchanges = conn.execute(
+    (kp, ) = conn.execute(
         """
-        SELECT * FROM deals_stage_history
-        WHERE (
-            pipeline_id != 0
-            OR stage_id IN ("PREPARATION", "UC_Q1P82J", "UC_3QF7OY", "UC_Q08ZUN", "17", "UC_CRI622", "18", "WON", "LOSE")
-        ) AND deal_id IN (
+        SELECT COUNT(*) FROM deals_stage_history
+        WHERE new_stage_id = "PREPARATION"
+        AND deal_id IN (
             SELECT id FROM deals WHERE sales_user_id = ?
         ) AND record_time BETWEEN ? AND ?
         """, (user_id, START_DATE, END_DATE)
-    ).fetchall()
-    for kp_dealchange in kp_sent_dealchanges:
-        deal_id = kp_dealchange['deal_id']
-        rec_id = kp_dealchange['id']
-        prev = conn.execute(
-            """
-            SELECT * FROM deals_stage_history
-            WHERE deal_id = ?
-            AND id < ?
-            ORDER BY id DESC
-            LIMIT 1
-            """, (deal_id, rec_id)
-        ).fetchone()
-        if not prev:
-            continue
-        if prev['pipeline_id'] == 20 or prev['stage_id'] in ('NEW', 'UC_O9A0TT', 'UC_WJYSPC', '15'):
-            kp += 1
-
+    ).fetchone()
 
     (calls_seconds, ) = conn.execute(
         """
@@ -150,42 +130,25 @@ def build_manager_data(user: sqlite3.Row, avatar: str) -> Dict:
         """, (user_id, START_DATE, END_DATE)
     ).fetchone()
 
-    dealchanges = conn.execute(
+    new_deal_ids = {row[0] for row in conn.execute(
         """
-        SELECT * FROM deals_stage_history 
-        WHERE pipeline_id = 21 
+        SELECT deal_id FROM deals_stage_history
+        WHERE record_time BETWEEN ? AND ?
         AND deal_id IN (
             SELECT id FROM deals WHERE sales_user_id = ?
-        ) AND record_time BETWEEN ? AND ?
-        """, (user_id, START_DATE, END_DATE)
-    ).fetchall()
-    new_deals_ids = set()
-    for dealchange in dealchanges:
-        deal_id = dealchange['deal_id']
-        change_id = dealchange['id']
-        prev = conn.execute(
-            """
-            SELECT * FROM deals_stage_history 
-            WHERE deal_id = ?
-            AND id < ?
-            ORDER BY id DESC LIMIT 1
-            """, (deal_id, change_id)
-        ).fetchone()
-        if prev and prev['pipeline_id'] in (0, 20):
-            new_deals_ids.add(deal_id)
-    
-    new_deals_ids = list(new_deals_ids)
-    
-    if new_deals_ids:
-        placeholders = ",".join("?" for _ in new_deals_ids)
-        query = f"""
-            SELECT SUM(profit) FROM deals 
-            WHERE id IN ({placeholders})
+        ) AND new_pipeline_id = 21
+        AND old_pipeline_id = 0
+        """, (START_DATE, END_DATE, user_id)
+    ).fetchall()}
+
+    new_deal_ids = [str(deal_id) for deal_id in new_deal_ids]
+
+    (profit, ) = conn.execute(
+        f"""
+        SELECT SUM(profit) FROM deals WHERE id IN ({','.join(new_deal_ids)})
         """
-        (profit,) = conn.execute(query, new_deals_ids).fetchone()
-        if not profit:
-            profit = 0
-    else:
+    ).fetchone()
+    if not profit:
         profit = 0
 
     (advances, ) = conn.execute(
@@ -206,7 +169,7 @@ def build_manager_data(user: sqlite3.Row, avatar: str) -> Dict:
         progress_info("КП",            kp,      BASE_PLANS["КП"]),
         progress_info("Звонки, мин",   calls,   BASE_PLANS["Звонки, мин"]),
         progress_info("Командировки",  trips,   BASE_PLANS["Командировки"]),
-        progress_info("Договоры",      len(new_deals_ids),   BASE_PLANS["Договоры"]),
+        progress_info("Договоры",      len(new_deal_ids),   BASE_PLANS["Договоры"]),
         progress_info("Авансы",        advances, BASE_PLANS["Авансы"], money=True),
         progress_info("Прибыль",       profit,  profit_plan,           money=True),
     ]

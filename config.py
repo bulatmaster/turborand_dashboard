@@ -41,6 +41,7 @@ SUPPLY_DEP_ID = 15  # ID отдела снабжения
 ]
 
 
+
 # Этапы воронок
 # crm.dealcategory.stage.list?id=<pipeline_id>
 # Продажа (0)
