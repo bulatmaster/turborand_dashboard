@@ -4,7 +4,7 @@ from datetime import datetime, timezone, date
 from typing import List, Dict
 from dataclasses import dataclass
 
-from flask import Flask, render_template, url_for
+from flask import Flask, render_template, url_for, send_from_directory
 
 import db 
 import config 
@@ -210,7 +210,7 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
     
     supply_requests_percent = safe_percent(supply_requests_processed, supply_requests_total)
     supply_requests_metric = Metric(
-        html_text=f"Заявки в снабжение:&nbsp;<span class='fw-semibold'>{supply_requests_processed} / {supply_requests_total}</span>",
+        html_text=f"Посчитано:&nbsp;<span class='fw-semibold'>{supply_requests_processed} / {supply_requests_total}</span>",
         percent=supply_requests_percent,
         css=css_by_metric('Заявки в снабжение', supply_requests_percent)
     )
@@ -317,7 +317,7 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
 
     requests_percent = safe_percent(complete_requests_count, requests_count)
     requests_metric = Metric(
-        html_text=f"Заявки:&nbsp;<span class='fw-semibold'>{complete_requests_count} / {requests_count}</span>",
+        html_text=f"Посчитано:&nbsp;<span class='fw-semibold'>{complete_requests_count} / {requests_count}</span>",
         percent=requests_percent,
         css=css_by_metric('Заявки', requests_percent)
     )
@@ -356,7 +356,7 @@ def index():
     start_date = f'{date.today().replace(day=1).strftime("%Y-%m-%d")}T00:00:00'
     end_date = f'{date.today().strftime("%Y-%m-%d")}T23:59:59'  
 
-    avatar   = url_for("static", filename="default_avatar.jpg")
+    avatar = url_for("static", filename="default_avatar.jpg")
 
     sales = [build_manager_data(r, avatar, start_date, end_date) for r
                 in conn.execute("SELECT * FROM users WHERE is_sales = 1").fetchall()]
@@ -367,6 +367,7 @@ def index():
     period_label = f'{months[date.today().month - 1].capitalize()} {date.today().year}'
 
     return render_template("index.html", sales=sales, supplies=supplies, period_label=period_label)
+
 
 # ─── запуск ───────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
