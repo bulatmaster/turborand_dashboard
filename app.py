@@ -338,9 +338,28 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
         css=css_by_metric('Растаможено', cleared_cargo)
     )
 
+    placeholder1 = Metric(
+        '<span class="text-muted">[Размещенных заказов поставщикам]</span>',
+        0,
+        css_by_metric('_', 0)
+    )
+    placeholder2 = Metric(
+        '<span class="text-muted">[Найдено новых поставщиков]</span>',
+        0,
+        css_by_metric('__', 0)
+    )
+    placeholder3 = Metric(
+        '<span class="text-muted">[Сэкономлено ДС]</span>',
+        0,
+        css_by_metric('___', 0)
+    )
+
     metrics = [
         requests_metric,
         cargo_metric,
+        placeholder1,
+        placeholder2,
+        placeholder3
     ]
 
     return ManagerInfo(
