@@ -18,7 +18,7 @@ def main():
             update_calls()
             update_deals()
             update_payments()
-            update_stage_history()
+            #update_stage_history()
             update_trips()
             update_users()
         except Exception as e:

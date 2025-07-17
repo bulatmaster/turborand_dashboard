@@ -1,12 +1,21 @@
 import re
 import csv 
-from datetime import datetime
+from datetime import datetime, timezone 
 from typing import Optional, Dict
 import phpserialize                       # pip install phpserialize
 
 
 def convert_date_format(date_str: str) -> str:
-    return datetime.strptime(date_str, "%d.%m.%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        dt = datetime.strptime(date_str, "%d.%m.%Y %H:%M:%S").strftime("%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        dt = date_str
+    
+    dt = datetime.strptime(dt, "%Y-%m-%d %H:%M:%S")
+    # Устанавливаем часовой пояс UTC
+    dt = dt.replace(tzinfo=timezone.utc)
+    # Возвращаем строку в формате ISO 8601
+    return dt.isoformat()
 
 # ── вспомогательные ────────────────────────────────────────────────────────
 _stage_prefix = re.compile(r"^C(\d+):")
@@ -17,17 +26,6 @@ def _category_from_stage(stage: Optional[str]) -> Optional[int]:
     m = _stage_prefix.match(stage)
     return int(m.group(1)) if m else None
 
-def _parse_created(dt: str) -> datetime:
-    """
-    Bitrix иногда хранит даты как '23.06.2025 13:59:02',
-    а иногда как '2025-06-23 13:59:02'. Попробуем оба формата.
-    """
-    for fmt in ("%d.%m.%Y %H:%M:%S", "%Y-%m-%d %H:%M:%S"):
-        try:
-            return datetime.strptime(dt, fmt)
-        except ValueError:
-            continue
-    raise ValueError(f"Не могу распарсить дату '{dt}'")
 
 # ── главный парсер ─────────────────────────────────────────────────────────
 def parse_event_line(row: Dict[str, str]) -> Dict[str, Optional[object]]:
@@ -45,10 +43,8 @@ def parse_event_line(row: Dict[str, str]) -> Dict[str, Optional[object]]:
         }
     """
     deal_id     = int(row["ASSOCIATED_ENTITY_ID"])
-    try:
-        record_date = convert_date_format(row["CREATED"])
-    except ValueError:
-        record_date = row["CREATED"]
+    record_date = convert_date_format(row["CREATED"])
+    
         
     settings_raw = row["SETTINGS"]
 

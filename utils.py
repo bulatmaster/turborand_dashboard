@@ -29,3 +29,5 @@ def emergency_report(message: str):
             'chat_id': chat_id,
             'text': message
         })
+
+
