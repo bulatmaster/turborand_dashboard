@@ -28,11 +28,12 @@
       font-size:.9rem;color:#000;pointer-events:none
     }
     .progress-label.badge-style{padding:.15rem .4rem;border-radius:.25rem}
+
   </style>
 </head>
 
 <body class="bg-dark text-custom">
-<div class="container-fluid py-5 px-2 px-lg-5" style="max-width:3240px">
+<div class="container-fluid py-5 px-2 px-lg-5" style="max-width:3640px">
 
   <div class="d-lg-flex align-items-center flex-wrap gap-4 mb-4">
     <h1 class="mb-0 text-secondary">TURBODESK</h1>
@@ -44,8 +45,13 @@
       ...
     </select>
     -->
+
     <span class="ms-3">{{ period_label }}</span>
-  </div>
+
+  <a href="{{ url_for('index', tv='0' if tv_mode else '1') }}"
+     class="btn btn-secondary ms-lg-auto">
+    {{ "Выключить ТВ режим" if tv_mode else "ТВ режим" }}
+  </a>  </div>
 
   <hr>
 
@@ -53,14 +59,24 @@
   <section class="mb-5">
     <h3 class="mb-4 text-center">Продажи</h3>
 
+    {% if tv_mode %}
+    <div class="row row-cols-6 g-4">
+    {% else %}
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-6 g-4">
+    {% endif %}
+
       {% for m in sales %}
       <div class="col">
         <div class="card h-100 shadow-sm p-3 bg-light">
 
           <div class="d-flex">
             <img src="{{ m.photo_url }}" alt="{{ m.name }}"
-                 class="rounded me-3" style="width:110px;height:110px;object-fit:cover">
+                 class="rounded me-3" 
+                 {% if tv_mode %}
+                 style="width:160px;height:160px;object-fit:cover">
+                 {% else %}
+                 style="width:110px;height:110px;object-fit:cover">
+                 {% endif %}
             <div class="flex-grow-1">
               <h5 class="mb-1">{{ m.name }}</h5>
               <p class="text-muted mb-2 small">{{ m.position }}</p>
@@ -94,7 +110,12 @@
   <section class="mb-5">
     <h3 class="mb-4 text-center">Снабжение</h3>
 
+    {% if tv_mode %}
+    <div class="row row-cols-6 g-4">
+    {% else %}
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-6 g-4">
+    {% endif %}
+
       {% for m in supplies %}
       <div class="col">
         <div class="card h-100 shadow-sm p-3 bg-light">
@@ -133,6 +154,21 @@
         crossorigin="anonymous"></script>
 
 
-  
+{% if tv_mode %}
+<script>
+  (function () {
+    const scale = 1.2 / (window.devicePixelRatio || 1);   // 300 % → 0.333…
+    document.documentElement.style.zoom = scale;        // Chrome/Edge
+    // fallback для Firefox
+    if (!CSS.supports('zoom: 1')) {
+      document.body.style.transform = `scale(${scale})`;
+      document.body.style.transformOrigin = '0 0';
+      document.body.style.width = 100 / scale + '%';
+    }
+  })();
+</script>
+{% endif %}
+        
+
 </body>
 </html>

@@ -4,7 +4,7 @@ from datetime import datetime, timezone, date
 from typing import List, Dict
 from dataclasses import dataclass
 
-from flask import Flask, render_template, url_for, send_from_directory
+from flask import Flask, render_template, url_for, send_from_directory, request
 
 import db 
 import config 
@@ -372,6 +372,8 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
 # ─── маршруты ────────────────────────────────────────────────────────────────
 @app.route("/")
 def index():
+    tv_mode = request.args.get("tv") == "1"
+
     start_date = f'{date.today().replace(day=1).strftime("%Y-%m-%d")}T00:00:00'
     end_date = f'{date.today().strftime("%Y-%m-%d")}T23:59:59'  
 
@@ -385,7 +387,13 @@ def index():
     
     period_label = f'{months[date.today().month - 1].capitalize()} {date.today().year}'
 
-    return render_template("index.html", sales=sales, supplies=supplies, period_label=period_label)
+    return render_template(
+        "index.html", 
+        sales=sales, 
+        supplies=supplies, 
+        period_label=period_label,
+        tv_mode=tv_mode
+    )
 
 
 # ─── запуск ───────────────────────────────────────────────────────────────────
