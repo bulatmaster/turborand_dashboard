@@ -24,7 +24,7 @@ def update_users():
         if 'SECOND_NAME' in user and user['SECOND_NAME']:
             name += ' ' + user['SECOND_NAME']
         if 'LAST_NAME' in user and user['LAST_NAME']:
-            name += user['LAST_NAME']
+            name += ' ' + user['LAST_NAME']
 
         photo_url = user['PERSONAL_PHOTO'] if 'PERSONAL_PHOTO' in user else None
 
