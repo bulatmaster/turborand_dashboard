@@ -20,6 +20,9 @@ def update_users():
     for user in data['result']:
         user_id = user['ID']
 
+        if int(user_id) == 1:  # Робот Турборэнд
+            continue 
+
         name = user['NAME']
         if 'SECOND_NAME' in user and user['SECOND_NAME']:
             name += ' ' + user['SECOND_NAME']
