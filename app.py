@@ -210,7 +210,7 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
     
     supply_requests_percent = safe_percent(supply_requests_processed, supply_requests_total)
     supply_requests_metric = Metric(
-        html_text=f"Посчитано:&nbsp;<span class='fw-semibold'>{supply_requests_processed} / {supply_requests_total}</span>",
+        html_text=f"Заявки в снабжение:&nbsp;<span class='fw-semibold'>{supply_requests_processed}</span>&nbsp;из&nbsp;<span class='fw-semibold'>{supply_requests_total}</span>",
         percent=supply_requests_percent,
         css=css_by_metric('Заявки в снабжение', supply_requests_percent)
     )
@@ -317,7 +317,7 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
 
     requests_percent = safe_percent(complete_requests_count, requests_count)
     requests_metric = Metric(
-        html_text=f"Посчитано:&nbsp;<span class='fw-semibold'>{complete_requests_count} / {requests_count}</span>",
+        html_text=f"Посчитано заявок:&nbsp;<span class='fw-semibold'>{complete_requests_count}</span>&nbsp;из&nbsp;<span class='fw-semibold'>{requests_count}</span>",
         percent=requests_percent,
         css=css_by_metric('Заявки', requests_percent)
     )
