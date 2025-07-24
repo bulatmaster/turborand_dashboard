@@ -10,18 +10,23 @@ conn = db.get_conn()
 
 
 def update_users():
-    request_url = f'{BX_WEBHOOK_URL}/user.get'
+    REQUEST_URL = f'{BX_WEBHOOK_URL}/user.get'
 
-    r = requests.get(request_url, {
+    r = requests.get(REQUEST_URL, {
         'FILTER[ACTIVE]': True
     })
     data = r.json()
 
-    for user in data['result']:
-        user_id = user['ID']
+    remaining_user_ids = {row[0] for row in conn.execute(
+        'SELECT id FROM users'
+    ).fetchall()}
 
-        if int(user_id) == 1:  # Робот Турборэнд
+    for user in data['result']:
+        user_id = int(user['ID'])
+
+        if user_id == 1:  # Робот Турборэнд
             continue 
+
 
         name = user['NAME']
         if 'SECOND_NAME' in user and user['SECOND_NAME']:
@@ -41,7 +46,22 @@ def update_users():
 
         date_register = user['DATE_REGISTER']
 
-        with conn:
+        if user_id in remaining_user_ids:
+            remaining_user_ids.remove(user_id)
+            conn.execute(
+                """
+                UPDATE users SET 
+                    name = ?,
+                    photo_url = ?,
+                    is_sales = ?,
+                    is_supply = ?,
+                    date_register = ?
+                WHERE id = ?
+                """, 
+                (name, photo_url, is_sales, is_supply, date_register, user_id)
+            )
+
+        else:
             conn.execute(
                 """
                 INSERT OR IGNORE INTO users 
@@ -49,6 +69,12 @@ def update_users():
                 VALUES (?, ?, ?, ?, ?, ?)
                 """, (user_id, name, photo_url, is_sales, is_supply, date_register)
             )
+    for user_id in remaining_user_ids:  # уволенные 
+        conn.execute(
+            'DELETE FROM users WHERE id = ?',
+            (user_id,)
+        )
+    conn.commit()
 
 
 
