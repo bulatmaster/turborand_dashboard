@@ -11,20 +11,17 @@ conn = db.get_conn()
 
 
 def update_deals():
-    method = 'crm.deal.list'
-
-    request_url = f'{config.BX_WEBHOOK_URL}/{method}'
+    METHOD = 'crm.deal.list'
+    REQUEST_URL = f'{config.BX_WEBHOOK_URL}/{METHOD}'
 
     last_modify_deal = conn.execute(
         'SELECT date_modify FROM deals ORDER BY date_modify DESC LIMIT 1'
     ).fetchone()
 
-    offset = 0
-
     deals_db = {row[0] for row in conn.execute('SELECT id FROM deals').fetchall()}
 
+    offset = 0
     while True:
-        
         params = {
             'select[]': ['*', 'UF_*'],
             "ORDER[DATE_MODIFY]": "ASC",
@@ -33,7 +30,7 @@ def update_deals():
         if last_modify_deal:
             params["FILTER[>DATE_MODIFY]"] = last_modify_deal[0],
 
-        r = requests.get(request_url, params=params)
+        r = requests.get(REQUEST_URL, params=params)
         data = r.json()
 
         for deal in data['result']:
