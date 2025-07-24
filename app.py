@@ -264,7 +264,7 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
     profit_metric = Metric(
         html_text=f"Прибыль:&nbsp;<span class='fw-semibold'>{format_money(profit)}</span>&nbsp;₽",
         percent=profit_percent,
-        css=css_by_metric('Прибыль', profit)
+        css=css_by_metric('Прибыль', profit_percent)
     ) 
 
     metrics = [
