@@ -11,4 +11,6 @@ with open('schema.sql') as f:
     with conn:
         conn.executescript(f.read())
 
+os.makedirs('logs', exist_ok=True)
+
 print('ok')

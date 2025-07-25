@@ -215,9 +215,9 @@ def update_stage_history():
             with sqlite_conn:
                 insert_batch(sqlite_conn, parsed)
             total_imported += len(parsed)
-            logging.info("Imported %d rows (up to ID %d)", total_imported, parsed[-1]["id"])
+            logging.debug("Imported %d rows (up to ID %d)", total_imported, parsed[-1]["id"])
 
-        logging.info("Done. Total new rows: %d", total_imported)
+        logging.debug("Done. Total new rows: %d", total_imported)
 
     finally:
         mysql_conn.close()
