@@ -64,7 +64,7 @@ def update_users():
         else:
             conn.execute(
                 """
-                INSERT OR IGNORE INTO users 
+                INSERT INTO users 
                 (id, name, photo_url, is_sales, is_supply, date_register)
                 VALUES (?, ?, ?, ?, ?, ?)
                 """, (user_id, name, photo_url, is_sales, is_supply, date_register)
