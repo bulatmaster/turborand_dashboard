@@ -17,6 +17,13 @@ import db
 conn = db.get_conn()
 
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+)
+
+
 def update_last_updated():
     now_moscow = datetime.now(ZoneInfo("Europe/Moscow"))
     ts = now_moscow.strftime("%d.%m.%Y %H:%M")
@@ -32,6 +39,7 @@ def update_last_updated():
 def main():
     while True:
         try:
+            logging.info('Обновляю данные..')
             update_users()
             update_deals()
             update_calls()
@@ -39,6 +47,7 @@ def main():
             update_stage_history()
             update_trips()
             update_last_updated()
+            logging.info('Данные обновлены')
         except Exception as e:
             emergency_report(f'turbodesk updater: {e.__class__.__name__}: {e}')
             logging.exception(e)

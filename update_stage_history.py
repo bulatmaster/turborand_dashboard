@@ -30,11 +30,7 @@ MYSQL_CONFIG = {
 SQLITE_PATH = os.getenv("SQLITE_PATH", "database.db")
 BATCH_SIZE  = int(os.getenv("BATCH_SIZE", 10_000))
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S",
-)
+
 
 ################################################################################
 # Утилиты преобразования дат и стадий
@@ -198,7 +194,7 @@ def update_stage_history():
 
     try:
         last_id = get_last_saved_id(sqlite_conn)
-        logging.info("Last imported id = %s", last_id)
+        logging.debug("Last imported id = %s", last_id)
 
         total_imported = 0
         for batch in fetch_batches(mysql_conn, start_id=last_id, batch_size=BATCH_SIZE):

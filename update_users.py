@@ -1,5 +1,6 @@
 import sqlite3 
 import requests 
+import logging
 
 import config 
 from config import BX_WEBHOOK_URL
