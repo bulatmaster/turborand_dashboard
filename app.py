@@ -387,12 +387,16 @@ def index():
     
     period_label = f'{months[date.today().month - 1].capitalize()} {date.today().year}'
 
+    (last_updated, ) = conn.execute("SELECT value FROM metadata WHERE key = 'last_updated'").fetchone()
+    
+
     return render_template(
         "index.html", 
         sales=sales, 
         supplies=supplies, 
         period_label=period_label,
-        tv_mode=tv_mode
+        tv_mode=tv_mode,
+        last_updated=last_updated
     )
 
 

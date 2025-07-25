@@ -4,6 +4,14 @@ import dotenv
 dotenv.load_dotenv(override=True)
 
 
+# MYSQL (сервер c битрикс24)
+MYSQL_HOST =     getenv("MYSQL_HOST")
+MYSQL_PORT =     int(getenv("MYSQL_PORT", 3306))
+MYSQL_USER =     getenv("MYSQL_USER")
+MYSQL_PASSWORD = getenv("MYSQL_PASSWORD")
+MYSQL_DATABASE = getenv("MYSQL_DATABASE")
+
+
 # TG Error Notitications 
 EMERGENCY_BOT_TOKEN = getenv('EMERGENCY_BOT_TOKEN')
 EMERGENCY_CONTACT_IDS = [5309563931]  # @bulatmaster 
@@ -13,7 +21,6 @@ BX_WEBHOOK_URL = getenv('BX_WEBHOOK_URL')
 
 SALES_DEP_ID = 54  # ID  отдела продаж
 SUPPLY_DEP_ID = 15  # ID отдела снабжения 
-
 
 
 

@@ -1,3 +1,9 @@
+CREATE TABLE metadata (
+    key TEXT,
+    value TEXT
+);
+INSERT INTO metadata (key, value) VALUES ('last_updated', 'N/A');
+
 CREATE TABLE users (
     id INTEGER PRIMARY KEY,
     name TEXT,
