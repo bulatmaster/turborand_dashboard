@@ -29,7 +29,7 @@ def update_last_updated():
 
 
 
-def update_stage_history():
+def main():
     while True:
         try:
             update_users()
@@ -47,5 +47,5 @@ def update_stage_history():
 
 
 if __name__ == '__main__':
-    update_stage_history()
+    main()
             
