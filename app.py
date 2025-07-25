@@ -1,5 +1,6 @@
 import sqlite3
 import random
+from calendar import monthrange
 from datetime import datetime, timezone, date
 from typing import List, Dict
 from dataclasses import dataclass
@@ -374,8 +375,34 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
 def index():
     tv_mode = request.args.get("tv") == "1"
 
-    start_date = f'{date.today().replace(day=1).strftime("%Y-%m-%d")}T00:00:00'
-    end_date = f'{date.today().strftime("%Y-%m-%d")}T23:59:59'  
+    # ---------- список из 6 периодов (текущий + 5 предыдущих) ----------
+    today = date.today()
+
+    def prev_month(dt: date, back: int) -> date:
+        y, m = dt.year, dt.month - back
+        while m <= 0:
+            y -= 1
+            m += 12
+        return date(y, m, 1)
+
+    period_options = []
+    for i in range(6):                        # 0..5 месяцев назад
+        d = prev_month(today, i)
+        period_options.append({
+            "value": d.strftime("%Y-%m"),     # например  «2025-07»
+            "label": f"{months[d.month-1].capitalize()} {d.year}"
+        })
+
+    selected_period = request.args.get("period",
+                                       period_options[0]["value"])
+
+    sel_year, sel_month = map(int, selected_period.split("-"))
+    first_day = date(sel_year, sel_month, 1)
+    last_day  = monthrange(sel_year, sel_month)[1]
+
+    start_date = f"{first_day:%Y-%m-%d}T00:00:00"
+    end_date   = f"{first_day.replace(day=last_day):%Y-%m-%d}T23:59:59"
+
 
     avatar = url_for("static", filename="default_avatar.jpg")
 
@@ -391,13 +418,15 @@ def index():
     
 
     return render_template(
-        "index.html", 
-        sales=sales, 
-        supplies=supplies, 
-        period_label=period_label,
-        tv_mode=tv_mode,
-        last_updated=last_updated
-    )
+    "index.html",
+    sales=sales,
+    supplies=supplies,
+    tv_mode=tv_mode,
+    last_updated=last_updated,
+    # новое
+    period_options=period_options,
+    selected_period=selected_period,
+)
 
 
 # ─── запуск ───────────────────────────────────────────────────────────────────

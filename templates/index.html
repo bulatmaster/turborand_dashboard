@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <meta http-equiv="refresh" content="300">  <!-- Автообновление страницы (секунды)-->
+  <meta http-equiv="refresh" content="3600">  <!-- Автообновление страницы (секунды)-->
 
 
   <style>
@@ -52,15 +52,25 @@
   <div class="d-lg-flex align-items-center flex-wrap gap-4 mb-4">
     <h1 class="mb-0 text-secondary">TURBODESK</h1>
 
-    <!--  
-    <select class="form-select d-inline-block w-auto bg-dark text-custom select-custom">
-      <option selected>июль 2025</option>
-      <option>июнь 2025</option>
-      ...
-    </select>
-    -->
+    <!-- Выбор периода -->
+    <form method="get" class="d-inline-block">
+      {# если открыт ТВ‑режим, параметр tv нужно сохранить #}
+      {% if tv_mode %}
+        <input type="hidden" name="tv" value="1">
+      {% endif %}
 
-    <span class="ms-3">{{ period_label }}</span>
+      <select name="period"
+              class="form-select d-inline-block w-auto bg-dark text-custom select-custom"
+              onchange="this.form.submit()">
+        {% for opt in period_options %}
+          <option value="{{ opt.value }}"
+                  {% if opt.value == selected_period %}selected{% endif %}>
+            {{ opt.label }}
+          </option>
+        {% endfor %}
+      </select>
+    </form>
+
     <span class="ms-3">Данные обновлены: {{ last_updated }}</span>
 
   <a href="{{ url_for('index', tv='0' if tv_mode else '1') }}"
