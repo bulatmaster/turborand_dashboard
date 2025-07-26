@@ -445,11 +445,14 @@ def kps():
     kps = []
 
     for file in files:
+        deal_id = file['deal_id']
+        file_name = file['original_file_name']
         (user_id, deal_title, opportunity, type_id) = conn.execute(
             'SELECT sales_user_id, title, opportunity, type_id FROM deals WHERE id = ?', 
-            (file['deal_id'],)
+            (deal_id,)
         ).fetchone()
         deal_type = config.STATUS_TYPES[type_id]
+        deal_url = f'https://crm.turborand.ru/crm/deal/details/{deal_id}/'
         manager_row = conn.execute(
             'SELECT name FROM users WHERE id = ?',
             (user_id,)
@@ -461,8 +464,11 @@ def kps():
         kps.append({
             'date': file['kp_date'][:10],
             'deal': deal_title,
+            'deal_url': deal_url,
             'deal_type': deal_type,
             'manager': manager_name, 
+            'file_name': file_name,
+            'file_url': 'https://google.com',
             'summary': file['summary'],
             'opportunity': f'{format_money(opportunity)}&nbsp;₽',
         })
