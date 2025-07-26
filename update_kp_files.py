@@ -100,7 +100,8 @@ def get_file_data(file_id):
 def copy_file(remote_path, original_name) -> str:
     os.makedirs('tmp', exist_ok=True)
     local_path = f'tmp/{original_name}'
-    os.system(f'scp turborand:"{remote_path}" "{local_path}"')
+    cmd = f'scp turborand:"{remote_path}" "{local_path}"'
+    os.system(cmd)
     return local_path
 
 
