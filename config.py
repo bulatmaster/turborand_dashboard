@@ -1,10 +1,11 @@
+import os 
 from os import getenv
 import dotenv
 
 dotenv.load_dotenv(override=True)
 
 
-# MYSQL (сервер c битрикс24)
+# MYSQL (главный сервер)
 MYSQL_HOST =     getenv("MYSQL_HOST")
 MYSQL_PORT =     int(getenv("MYSQL_PORT", 3306))
 MYSQL_USER =     getenv("MYSQL_USER")
@@ -12,12 +13,28 @@ MYSQL_PASSWORD = getenv("MYSQL_PASSWORD")
 MYSQL_DATABASE = getenv("MYSQL_DATABASE")
 
 
-# TG Error Notitications 
+MYSQL_CONFIG = {
+    "host": MYSQL_HOST,
+    "port": MYSQL_PORT,
+    "user": MYSQL_USER,
+    "password": MYSQL_PASSWORD,
+    "database": MYSQL_DATABASE,
+    "charset":  "utf8mb4",
+    "autocommit": False,      # будем коммитить сами после каждого батча
+}
+
+
+HTTP_PROXY_URL = getenv('HTTP_PROXY_URL')
+OPENAI_KEY  = getenv('OPENAI_KEY')
+ASST_ID = getenv('ASST_ID')
+
+# Telegram Уведомления об ошибках
 EMERGENCY_BOT_TOKEN = getenv('EMERGENCY_BOT_TOKEN')
-EMERGENCY_CONTACT_IDS = [5309563931]  # @bulatmaster 
+EMERGENCY_CONTACT_IDS = [5309563931]   # @bulatmaster 
 
 
 BX_WEBHOOK_URL = getenv('BX_WEBHOOK_URL')
+
 
 SALES_DEP_ID = 54  # ID  отдела продаж
 SUPPLY_DEP_ID = 15  # ID отдела снабжения 
@@ -30,7 +47,15 @@ CONTRACT_STAGES = ('C21:NEW', 'C21:PREPARATION', 'C21:UC_6XX9P7', 'C21:PREPAYMEN
 SUPPLY_IN_PROGRESS_STAGES = ('C20:PREPARATION', 'C20:PREPAYMENT_INVOIC', 'C20:UC_XRMVHI', 'C20:WON', 'C20:LOSE')
 CARGO_CLEARED_STAGES = ('C21:UC_YU26O5', 'C21:UC_KR9EHV', 'C21:UC_78XHX0', 'C21:UC_FOAJK1', 'C21:UC_CAJFEH', 'C21:UC_1A0H14', 'C21:WON', 'C21:LOSE', 'C21:APOLOGY')
 
-
+STATUS_TYPES = {
+    "SALE": "Прямая продажа",
+    "UC_MBAY1E": "Прямая закупка",
+    "UC_KROLC6": "Тендер не под нас",
+    "UC_BYNIUH": "Тендер под нас",
+    "UC_HP3VTF": "Внутренний конкурс",
+    "UC_MVUG9F": "Мониторинг цен",
+    "UC_MT07DI": "Непонятная заявка",
+}
 
 ############ СПРАВОЧНИК ################
 

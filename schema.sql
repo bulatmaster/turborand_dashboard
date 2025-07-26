@@ -20,6 +20,8 @@ CREATE TABLE calls (
 );
 CREATE TABLE deals (
     id INTEGER PRIMARY KEY,
+    title TEXT,
+    type_id TEXT,
     sales_user_id INTEGER,
     supply_user_id INTEGER,
     pipeline_id INTEGER,
@@ -28,6 +30,14 @@ CREATE TABLE deals (
     opportunity INTEGER,
     profit INTEGER,
     date_modify TEXT
+);
+CREATE TABLE kp_files (
+    file_id INTEGER PRIMARY KEY,
+    deal_id INTEGER,
+    kp_date TEXT,
+    original_file_name TEXT,
+    remote_file_path TEXT,
+    summary TEXT
 );
 CREATE TABLE deals_stage_history (
     id INTEGER PRIMARY KEY,

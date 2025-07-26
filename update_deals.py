@@ -2,7 +2,6 @@ import requests
 
 import config 
 import db 
-
 from utils import money_to_int
 
 
@@ -35,6 +34,8 @@ def update_deals():
 
         for deal in data['result']:
             deal_id = int(deal['ID'])
+            title = deal['TITLE']
+            type_id = deal['TYPE_ID']
             sales_user_id = deal['ASSIGNED_BY_ID']
             supply_user_id = deal['UF_CRM_1719307895']
             pipeline_id = deal['CATEGORY_ID']
@@ -43,59 +44,80 @@ def update_deals():
             opportunity = money_to_int(deal['OPPORTUNITY'])
             profit = money_to_int(deal['UF_CRM_1745583203057'])
             date_modify = deal['DATE_MODIFY']
+            kp_files = deal['UF_CRM_1681378238969']
 
             if deal_id in deals_db:
-                with conn:
-                    conn.execute(
-                        """
-                        UPDATE deals SET 
-                            sales_user_id = ?,
-                            supply_user_id = ?,
-                            pipeline_id = ?,
-                            stage_id = ?,
-                            stage_semantic_id = ?,
-                            opportunity = ?,
-                            profit = ?,
-                            date_modify = ?
-                        WHERE id = ?
-                        """, (
-                            sales_user_id, 
-                            supply_user_id, 
-                            pipeline_id, 
-                            stage_id, 
-                            stage_semantic_id, 
-                            opportunity, 
-                            profit,
-                            date_modify,
-                            deal_id
-                        )
+                conn.execute(
+                    """
+                    UPDATE deals SET 
+                        title = ?,
+                        type_id = ?,
+                        sales_user_id = ?,
+                        supply_user_id = ?,
+                        pipeline_id = ?,
+                        stage_id = ?,
+                        stage_semantic_id = ?,
+                        opportunity = ?,
+                        profit = ?,
+                        date_modify = ?
+                    WHERE id = ?
+                    """, (
+                        title,
+                        type_id,
+                        sales_user_id, 
+                        supply_user_id, 
+                        pipeline_id, 
+                        stage_id, 
+                        stage_semantic_id, 
+                        opportunity, 
+                        profit,
+                        date_modify,
+                        deal_id
                     )
+                )
             else:
-                with conn:
-                    conn.execute(
-                        """
-                        INSERT INTO deals (  
-                            id, 
-                            sales_user_id, 
-                            supply_user_id, 
-                            pipeline_id, 
-                            stage_id, 
-                            stage_semantic_id, 
-                            opportunity, 
-                            profit,
-                            date_modify
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                        """, (deal_id, 
-                              sales_user_id, 
-                              supply_user_id, 
-                              pipeline_id, 
-                              stage_id, 
-                              stage_semantic_id, 
-                              opportunity, 
-                              profit, 
-                              date_modify)
+                conn.execute(
+                    """
+                    INSERT INTO deals (  
+                        id, 
+                        title,
+                        type_id,
+                        sales_user_id, 
+                        supply_user_id, 
+                        pipeline_id, 
+                        stage_id, 
+                        stage_semantic_id, 
+                        opportunity, 
+                        profit,
+                        date_modify
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (
+                        deal_id, 
+                        title,
+                        type_id,
+                        sales_user_id, 
+                        supply_user_id, 
+                        pipeline_id, 
+                        stage_id, 
+                        stage_semantic_id, 
+                        opportunity, 
+                        profit, 
+                        date_modify,
                     )
-            
+                )
+
+            for kp in kp_files:
+                file_id = int(kp['id'])
+
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO kp_files
+                    (file_id, deal_id) 
+                    VALUES (?, ?)
+                    """, (file_id, deal_id)
+                )        
+        
+        conn.commit()
         
         if data['total'] - offset <= 50:
             break 

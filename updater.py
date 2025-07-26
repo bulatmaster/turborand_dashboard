@@ -9,6 +9,7 @@ from update_payments import update_payments
 from update_stage_history import update_stage_history
 from update_trips import update_trips
 from update_users import update_users 
+from update_kp_files import update_kps
 from utils import emergency_report
 
 import db 
@@ -47,6 +48,7 @@ def main():
             update_stage_history()
             update_trips()
             update_last_updated()
+            update_kps()
             logging.info('Данные обновлены')
         except Exception as e:
             emergency_report(f'turbodesk updater: {e.__class__.__name__}: {e}')

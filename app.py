@@ -115,7 +115,7 @@ def format_money(val: int | float) -> str:
     """
     Форматирует число с разделением тысяч пробелами
     """
-    return f"{int(val):,}".replace(",", " ")
+    return f"{int(val):,}".replace(",", "&nbsp;")
 
 
 def get_manager_position(start_date_str):
@@ -418,15 +418,64 @@ def index():
     
 
     return render_template(
-    "index.html",
-    sales=sales,
-    supplies=supplies,
-    tv_mode=tv_mode,
-    last_updated=last_updated,
-    # новое
-    period_options=period_options,
-    selected_period=selected_period,
-)
+        "index.html",
+        sales=sales,
+        supplies=supplies,
+        tv_mode=tv_mode,
+        last_updated=last_updated,
+        # новое
+        period_options=period_options,
+        selected_period=selected_period,
+    )
+
+
+
+@app.route("/kp")
+def kps():
+
+    files = conn.execute(
+        """
+        SELECT * FROM kp_files 
+        WHERE kp_date > "2025-07"
+        AND summary IS NOT NULL
+        ORDER BY kp_date DESC
+        """
+    ).fetchall()
+
+    kps = []
+
+    for file in files:
+        (user_id, deal_title, opportunity, type_id) = conn.execute(
+            'SELECT sales_user_id, title, opportunity, type_id FROM deals WHERE id = ?', 
+            (file['deal_id'],)
+        ).fetchone()
+        deal_type = config.STATUS_TYPES[type_id]
+        manager_row = conn.execute(
+            'SELECT name FROM users WHERE id = ?',
+            (user_id,)
+        ).fetchone()
+        if manager_row:
+            manager_name = manager_row['name']
+        else:
+            manager_name = '[уволенный сотрудник]'
+        kps.append({
+            'date': file['kp_date'][:10],
+            'deal': deal_title,
+            'deal_type': deal_type,
+            'manager': manager_name, 
+            'summary': file['summary'],
+            'opportunity': f'{format_money(opportunity)}&nbsp;₽',
+        })
+
+
+    (last_updated, ) = conn.execute("SELECT value FROM metadata WHERE key = 'last_updated'").fetchone()
+
+    return render_template(
+        'kps.html',
+        kps=kps,
+        last_updated=last_updated
+    )
+
 
 
 # ─── запуск ───────────────────────────────────────────────────────────────────

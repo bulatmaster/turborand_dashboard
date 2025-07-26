@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 from typing import Dict, Optional, Iterable, List
 from zoneinfo import ZoneInfo          
 
-import config 
+from config import MYSQL_CONFIG
 import db 
 
 
@@ -17,15 +17,7 @@ import db
 ################################################################################
 # Конфигурация
 ################################################################################
-MYSQL_CONFIG = {
-    "host": config.MYSQL_HOST,
-    "port": config.MYSQL_PORT,
-    "user": config.MYSQL_USER,
-    "password": config.MYSQL_PASSWORD,
-    "database": config.MYSQL_DATABASE,
-    "charset":  "utf8mb4",
-    "autocommit": False,      # будем коммитить сами после каждого батча
-}
+
 
 SQLITE_PATH = os.getenv("SQLITE_PATH", "database.db")
 BATCH_SIZE  = int(os.getenv("BATCH_SIZE", 10_000))
