@@ -171,6 +171,26 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         css=css_by_metric('Звонки', calls)
     )
 
+     # Расходы по командировкам 
+    (trip_expenses, ) = conn.execute(
+        """
+        SELECT SUM(amount) FROM trip_expenses
+        WHERE trip_id IN (
+            SELECT id FROM trips 
+            WHERE user_id = ? 
+            AND begin_time BETWEEN ? AND ?
+        )
+        """, (user_id, start_date, end_date)
+    ).fetchone()
+    if not trip_expenses:
+        trip_expenses = 0
+    
+    trip_expenses_metric = Metric(
+        html_text=f"Расходы по командировкам:&nbsp;<span class='fw-semibold'>{format_money(trip_expenses)}</span>&nbsp;₽",
+        percent=0,
+        css=css_by_metric('Расходы по командировкам', 0)
+    )
+
     # Командировки 
     (trips, ) = conn.execute(
         """
@@ -179,8 +199,14 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         AND begin_time BETWEEN ? AND ?
         """, (user_id, start_date, end_date)
     ).fetchone()
+
+    if trip_expenses:
+        expenses_str = f"<span class='text-muted text-green'>&nbsp;&nbsp;&nbsp;{format_money(trip_expenses)}&nbsp₽</span>"
+    else:
+        expenses_str = ''
+
     trips_metric = Metric(
-        html_text=f"Командировки:&nbsp;<span class='fw-semibold'>{trips}</span>",
+        html_text=f"Командировки:&nbsp;<span class='fw-semibold'>{trips}</span>{expenses_str}",
         percent=safe_percent(trips, PLANS['Командировки']),
         css=css_by_metric('Командировки', trips)
     )

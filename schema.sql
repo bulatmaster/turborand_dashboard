@@ -64,3 +64,8 @@ CREATE TABLE trips (
     end_time TEXT,
     date_modify TEXT
 );
+CREATE TABLE trip_expenses (
+    id INTEGER PRIMARY KEY,
+    trip_id INTEGER,
+    amount INTEGER
+)
