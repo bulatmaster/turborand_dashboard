@@ -33,6 +33,8 @@ CREATE TABLE deals (
 );
 CREATE TABLE kp_files (
     file_id INTEGER PRIMARY KEY,
+    show_url TEXT,
+    download_url TEXT,
     deal_id INTEGER,
     kp_date TEXT,
     original_file_name TEXT,

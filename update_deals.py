@@ -108,13 +108,15 @@ def update_deals():
 
             for kp in kp_files:
                 file_id = int(kp['id'])
-
+                show_url = kp['showUrl']
+                download_url = kp['downloadUrl']
+    
                 conn.execute(
                     """
                     INSERT OR IGNORE INTO kp_files
-                    (file_id, deal_id) 
-                    VALUES (?, ?)
-                    """, (file_id, deal_id)
+                    (file_id, deal_id, show_url, download_url) 
+                    VALUES (?, ?, ?, ?)
+                    """, (file_id, deal_id, show_url, download_url)
                 )        
         
         conn.commit()

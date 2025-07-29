@@ -544,8 +544,6 @@ def index():
     supplies = [build_supply_data(r, avatar, start_date, end_date) for r
                 in conn.execute("SELECT * FROM users WHERE is_supply = 1").fetchall()]
     
-    period_label = f'{months[date.today().month - 1].capitalize()} {date.today().year}'
-
     (last_updated, ) = conn.execute("SELECT value FROM metadata WHERE key = 'last_updated'").fetchone()
     
 
@@ -555,7 +553,6 @@ def index():
         supplies=supplies,
         tv_mode=tv_mode,
         last_updated=last_updated,
-        # новое
         period_options=period_options,
         selected_period=selected_period,
     )
@@ -564,7 +561,7 @@ def index():
 
 @app.route("/kp")
 def kps():
-
+    current_datetime = datetime.now(timezone.utc)
     files = conn.execute(
         """
         SELECT * FROM kp_files 
@@ -578,21 +575,105 @@ def kps():
 
     for file in files:
         deal_id = file['deal_id']
-        file_name = file['original_file_name']
-        (user_id, deal_title, opportunity, type_id) = conn.execute(
-            'SELECT sales_user_id, title, opportunity, type_id FROM deals WHERE id = ?', 
-            (deal_id,)
-        ).fetchone()
-        deal_type = config.STATUS_TYPES[type_id]
+        deal = conn.execute(f'SELECT * FROM deals WHERE id = {deal_id}').fetchone()
+
+        user_id = deal['sales_user_id']
+
+        # Название сделки  (кликабельное)
+        deal_title = deal['title']
         deal_url = f'https://crm.turborand.ru/crm/deal/details/{deal_id}/'
-        manager_row = conn.execute(
+
+        # Название файла КП (кликабельное)
+        file_name = file['original_file_name']
+        file_url = f'https://crm.turborand.ru{file["download_url"]}'
+
+        # Сумма сделки 
+        opportunity  = deal['opportunity']
+
+        # Тип сделки 
+        deal_type = config.STATUS_TYPES[deal['type_id']]
+
+        # Менеджер
+        manager = conn.execute(
             'SELECT name FROM users WHERE id = ?',
             (user_id,)
         ).fetchone()
-        if manager_row:
-            manager_name = manager_row['name']
+        manager_name = manager['name'] if manager else '[уволенный сотрудник]'
+
+        # Результат сделки + выделение строки цветом 
+        if deal['pipeline_id'] == 21:  # Исп. договора
+            result = 'Договор заключен'
+            row_color = 'table-success'
+        elif deal['stage_id'] in ('17', 'UC_CRI622'):
+            result = 'Заключаем договор'
+            row_color = 'table-warning'
+        elif deal['stage_semantic_id'] == 'F':  # Fail
+            result = 'Сделка провалена'
+            row_color = 'table-danger'
+
+        elif deal['stage_id'] == 'PREPARATION':
+            (kp_sent_dt, ) = conn.execute(
+                f"""
+                SELECT record_time FROM deals_stage_history 
+                WHERE deal_id = {deal_id} AND new_stage_id = "PREPARATION"
+                ORDER BY id DESC LIMIT 1
+                """
+            ).fetchone()
+            days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(kp_sent_dt)).days
+            result = f'КП отправлено {days_ago} дн. назад'
+            row_color = 'table-warning' if days_ago >= 7 else ''
+
+        elif deal['stage_id'] == 'UC_Q08ZUN':  # Замороженные КП 
+            (kp_frozen_dt, ) = conn.execute(
+                f"""
+                SELECT record_time FROM deals_stage_history 
+                WHERE deal_id = {deal_id} AND new_stage_id = "UC_Q08ZUN"
+                ORDER BY id DESC LIMIT 1
+                """
+            ).fetchone()
+            days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(kp_frozen_dt)).days
+            result = f'КП заморожено {days_ago} дн. назад'
+            row_color = ''
+
         else:
-            manager_name = '[уволенный сотрудник]'
+            result = config.STATUS_IDS[deal['stage_id']]
+            row_color = ''
+
+        # Время обработки 
+        try:
+            (start_time_str,) = conn.execute(
+                f"""
+                SELECT record_time FROM deals_stage_history
+                WHERE deal_id = {deal_id}
+                AND old_pipeline_id = 0
+                AND new_pipeline_id = 20
+                ORDER BY id 
+                LIMIT 1
+                """
+            ).fetchone()
+            start_time = datetime.fromisoformat(start_time_str)
+
+            (end_time_str, ) = conn.execute(
+                f"""
+                SELECT record_time FROM deals_stage_history
+                WHERE deal_id = {deal_id}
+                AND old_pipeline_id = 20
+                AND new_pipeline_id = 0
+                ORDER BY id DESC
+                LIMIT 1
+                """
+            ).fetchone()
+            end_time = datetime.fromisoformat(end_time_str)
+                
+            duration_hours = (end_time - start_time).total_seconds() / 3600
+        
+            duration_days = round(duration_hours/24, 1)
+
+            processing_time = f'{duration_days} дн.'
+        
+        except Exception:  # не найдена строка в ДБ и т.д.
+            processing_time = 'N/A'
+
         kps.append({
             'date': file['kp_date'][:10],
             'deal': deal_title,
@@ -600,9 +681,12 @@ def kps():
             'deal_type': deal_type,
             'manager': manager_name, 
             'file_name': file_name,
-            'file_url': 'https://google.com',
+            'file_url': file_url,
             'summary': file['summary'],
             'opportunity': f'{format_money(opportunity)}&nbsp;₽',
+            'result': result,
+            'row_color': row_color,
+            'processing_time': processing_time,
         })
 
 

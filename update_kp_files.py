@@ -23,11 +23,14 @@ def update_kps():
     os.makedirs('tmp', exist_ok=True)
 
     kps_unprocessed = conn.execute(
-        'SELECT * FROM kp_files WHERE kp_date IS NULL ORDER BY file_id DESC'
+        'SELECT * FROM kp_files WHERE summary IS NULL ORDER BY file_id DESC'
     ).fetchall()
 
     for kp in kps_unprocessed:
-        update_kp(kp)
+        try:
+            update_kp(kp)
+        except Exception as e:
+            print(f'{e.__class__.__name__}: {e}')
 
 
 def update_kp(kp: Row):
@@ -35,10 +38,10 @@ def update_kp(kp: Row):
 
     data = get_file_data(file_id)
 
-    if str(data.kp_date) > '2025-07':
+    if str(data.kp_date) > '2025-05':
         file_path = copy_file(data.remote_file_path, data.original_file_name)
 
-        if file_path.endswith('.xlsx'):
+        if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
             file_path = excel_to_json(file_path)
 
         summary = summarize(file_path)
@@ -135,11 +138,11 @@ def summarize(file_path: str) -> str:
     PROMPT = """
         Напиши в одном предложении 
         ОБЪЕКТ прикрепленного коммерческого предложения 
-        (что именно продаём).
+        (что именно продаём) + ИТОГОВАЯ сумма сделки.
         ПРИМЕРЫ ОТВЕТОВ:
-        "ТО компрессора <модель оборудования>"
-        "Продажа компрессора <модель оборудования>"
-        "Продажа и пусконаладочные работы оборудования <модель оборудования>"
+        "ТО компрессора <модель оборудования> за 1 000 000 ₽"
+        "Продажа компрессора <модель оборудования> за 15 000 000 ₽"
+        "Продажа и пусконаладочные работы оборудования <модель оборудования> за 25 500 125₽"
         НЕ добавляй вводные конструкции вроде "Объект предложения: ...",  
         "Объектом предложения является ..."
         НЕ включая излишние подробности, например точные длинные серийные номера оборудования 
