@@ -625,7 +625,7 @@ def kps():
                 """
             ).fetchone()
             days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(kp_sent_dt)).days
-            result = f'КП отправлено {days_ago} дн. назад'
+            result = f'КП отправлено ({days_ago} дн.)'
             row_color = 'table-warning' if days_ago >= 7 else ''
 
         elif deal['stage_id'] == 'UC_Q08ZUN':  # Замороженные КП 
@@ -637,7 +637,7 @@ def kps():
                 """
             ).fetchone()
             days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(kp_frozen_dt)).days
-            result = f'КП заморожено {days_ago} дн. назад'
+            result = f'КП заморожено ({days_ago} дн.)'
             row_color = ''
 
         else:
