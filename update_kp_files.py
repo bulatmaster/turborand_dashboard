@@ -38,21 +38,25 @@ def update_kp(kp: Row):
 
     data = get_file_data(file_id)
 
-    if str(data.kp_date) > '2025-05':
-        file_path = copy_file(data.remote_file_path, data.original_file_name)
+    summary = None
 
-        if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
-            file_path = excel_to_json(file_path)
+    try:
 
-        summary = summarize(file_path)
+        if str(data.kp_date) > '2025-05':
+            file_path = copy_file(data.remote_file_path, data.original_file_name)
+
+            if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
+                file_path = excel_to_json(file_path)
+
+            summary = summarize(file_path)
+            
+            summary = clear_model_response(summary)
+
+            os.remove(file_path)
+
+    except Exception as e:
+        print(f'{e.__class__.__name__}: {e}')
         
-        summary = clear_model_response(summary)
-
-        os.remove(file_path)
-    
-    else:
-        summary = None
-    
     with conn:
         conn.execute(
             """
@@ -76,9 +80,7 @@ class FileData:
 
 def get_file_data(file_id):
     """
-    Получает путь файлу из MySQL, 
-    копирует файл с главного сервера,
-    возвращает путь к фалйу 
+    Получает данные о файле с MySQL
     """
     with mysql_conn.cursor(dictionary=True) as cur:
         cur.execute(f'SELECT * FROM b_file WHERE ID = {file_id}')
@@ -139,14 +141,17 @@ def summarize(file_path: str) -> str:
         Напиши в одном предложении 
         ОБЪЕКТ прикрепленного коммерческого предложения 
         (что именно продаём) + ИТОГОВАЯ сумма сделки.
-        ПРИМЕРЫ ОТВЕТОВ:
+
+        ПРИМЕРЫ ОТВЕТОВ (возвращай без кавычек):
         "ТО компрессора <модель оборудования> за 1 000 000 ₽"
         "Продажа компрессора <модель оборудования> за 15 000 000 ₽"
         "Продажа и пусконаладочные работы оборудования <модель оборудования> за 25 500 125₽"
+
         НЕ добавляй вводные конструкции вроде "Объект предложения: ...",  
         "Объектом предложения является ..."
         НЕ включая излишние подробности, например точные длинные серийные номера оборудования 
         (достаточно марки / основного названия модели)
+        Если не нашел, верни "" (пустую строку)
     """
     
 

@@ -565,8 +565,7 @@ def kps():
     files = conn.execute(
         """
         SELECT * FROM kp_files 
-        WHERE kp_date > "2025-07"
-        AND summary IS NOT NULL
+        WHERE kp_date > "2025-05"
         ORDER BY kp_date DESC
         """
     ).fetchall()
@@ -584,8 +583,12 @@ def kps():
         deal_url = f'https://crm.turborand.ru/crm/deal/details/{deal_id}/'
 
         # Название файла КП (кликабельное)
-        file_name = file['original_file_name']
-        file_url = f'https://crm.turborand.ru{file["download_url"]}'
+        if file['original_file_name']:
+            file_name = file['original_file_name']
+            file_url = f'https://crm.turborand.ru{file["download_url"]}'
+        else:
+            file_name = ''
+            file_url = ''
 
         # Сумма сделки 
         opportunity  = deal['opportunity']
@@ -604,9 +607,11 @@ def kps():
         if deal['pipeline_id'] == 21:  # Исп. договора
             result = 'Договор заключен'
             row_color = 'table-success'
+
         elif deal['stage_id'] in ('17', 'UC_CRI622'):
             result = 'Заключаем договор'
-            row_color = 'table-warning'
+            row_color = 'table-primary'
+
         elif deal['stage_semantic_id'] == 'F':  # Fail
             result = 'Сделка провалена'
             row_color = 'table-danger'
@@ -636,7 +641,17 @@ def kps():
             row_color = ''
 
         else:
-            result = config.STATUS_IDS[deal['stage_id']]
+            stage_id = deal['stage_id']
+            (stage_dt, ) = conn.execute(
+                f"""
+                SELECT record_time FROM deals_stage_history 
+                WHERE deal_id = {deal_id} AND new_stage_id = "{stage_id}"
+                ORDER BY id DESC LIMIT 1
+                """
+            ).fetchone()
+            days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(stage_dt)).days
+            stage_name = config.STATUS_IDS[stage_id]
+            result = f'{stage_name} ({days_ago} дн.)'
             row_color = ''
 
         # Время обработки 
@@ -667,12 +682,18 @@ def kps():
                 
             duration_hours = (end_time - start_time).total_seconds() / 3600
         
-            duration_days = round(duration_hours/24, 1)
+            if duration_hours < 72:
+                processing_time = f'{int(duration_hours)} ч.'
 
-            processing_time = f'{duration_days} дн.'
+            else:
+                duration_days = int(duration_hours/24)
+                processing_time = f'{duration_days} дн.'
         
         except Exception:  # не найдена строка в ДБ и т.д.
             processing_time = 'N/A'
+
+        # Summary 
+        summary = file['summary'] if file['summary'] else ''
 
         kps.append({
             'date': file['kp_date'][:10],
@@ -682,7 +703,7 @@ def kps():
             'manager': manager_name, 
             'file_name': file_name,
             'file_url': file_url,
-            'summary': file['summary'],
+            'summary': summary,
             'opportunity': f'{format_money(opportunity)}&nbsp;₽',
             'result': result,
             'row_color': row_color,
