@@ -4,6 +4,7 @@ from calendar import monthrange
 from datetime import datetime, timezone, date
 from typing import List, Dict
 from dataclasses import dataclass
+from statistics import mean
 
 from flask import Flask, render_template, url_for, send_from_directory, request
 
@@ -242,6 +243,57 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         css=css_by_metric('Заявки в снабжение', supply_requests_percent)
     )
 
+    # Время расчёта заявки 
+    deltas = []
+    current_datetime = datetime.now(timezone.utc)
+    for deal_id in supply_request_ids:
+        (start_time_str,) = conn.execute(
+            f"""
+            SELECT record_time FROM deals_stage_history
+            WHERE deal_id = {deal_id}
+            AND old_pipeline_id = 0
+            AND new_pipeline_id = 20
+            ORDER BY id 
+            LIMIT 1
+            """
+        ).fetchone()
+        start_time = datetime.fromisoformat(start_time_str)
+
+        deal = conn.execute(f'SELECT * FROM deals WHERE id = {deal_id}').fetchone()
+
+        if deal['pipeline_id'] == 20:  # Снабжение для КП  (заявка ещё считается)
+            end_time = current_datetime
+
+        else:
+            (end_time_str, ) = conn.execute(
+                f"""
+                SELECT record_time FROM deals_stage_history
+                WHERE deal_id = {deal_id}
+                AND old_pipeline_id = 20
+                AND new_pipeline_id = 0
+                ORDER BY id DESC
+                LIMIT 1
+                """
+            ).fetchone()
+            end_time = datetime.fromisoformat(end_time_str)
+            
+        duration_hours = (end_time - start_time).total_seconds() / 3600
+        deltas.append(duration_hours)
+    
+    if deltas:
+        avg_proc_hrs = round(mean(deltas), 1)
+        avg_proc_days = round(avg_proc_hrs/24, 1)
+
+        avg_time_str = f'{avg_proc_days} дн.'
+    
+    else:
+        avg_time_str = 'N/A'
+
+    supply_processing_time_metric = Metric(
+        html_text=f"Среднее время расчёта:&nbsp;<span class='fw-semibold'>{avg_time_str}</span>",
+        percent=0,
+        css=css_by_metric(0, 'Среднее время расчёта')
+    )
 
     # Договоры 
     contract_deal_ids = {row[0] for row in conn.execute(
@@ -299,6 +351,7 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         calls_metric,
         trips_metric,
         supply_requests_metric,
+        supply_processing_time_metric,
         contracts_metric,
         advances_metric,
         profit_metric,
@@ -322,7 +375,7 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
     requests_deal_ids = {row[0] for row in conn.execute(
         f"""
         SELECT deal_id FROM deals_stage_history
-        WHERE new_stage_id IN {config.SUPPLY_IN_PROGRESS_STAGES}
+        WHERE new_stage_id IN {config.SUPPLY_CALCULATION_IN_PROGRESS_STAGES}
         AND record_time BETWEEN '{start_date}' AND '{end_date}'
         AND deal_id IN (SELECT id FROM deals WHERE supply_user_id = {user_id})
         """
@@ -347,6 +400,58 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
         html_text=f"Посчитано заявок:&nbsp;<span class='fw-semibold'>{complete_requests_count}</span>&nbsp;из&nbsp;<span class='fw-semibold'>{requests_count}</span>",
         percent=requests_percent,
         css=css_by_metric('Заявки', requests_percent)
+    )
+
+    # Среднее время расчета заявки 
+    deltas = []
+    current_datetime = datetime.now(timezone.utc)
+    for deal_id in requests_deal_ids:
+        (start_time_str,) = conn.execute(
+            f"""
+            SELECT record_time FROM deals_stage_history
+            WHERE deal_id = {deal_id}
+            AND old_stage_id = "C20:NEW"
+            AND new_stage_id IN {config.SUPPLY_CALCULATION_IN_PROGRESS_STAGES}
+            ORDER BY id 
+            LIMIT 1
+            """
+        ).fetchone()
+        start_time = datetime.fromisoformat(start_time_str)
+
+        deal = conn.execute(f'SELECT * FROM deals WHERE id = {deal_id}').fetchone()
+
+        if deal['pipeline_id'] == 20:  # Снабжение для КП  (заявка ещё считается)
+            end_time = current_datetime
+
+        else:
+            (end_time_str, ) = conn.execute(
+                f"""
+                SELECT record_time FROM deals_stage_history
+                WHERE deal_id = {deal_id}
+                AND old_pipeline_id = 20
+                AND new_pipeline_id = 0
+                ORDER BY id DESC
+                LIMIT 1
+                """
+            ).fetchone()
+            end_time = datetime.fromisoformat(end_time_str)
+            
+        duration_hours = (end_time - start_time).total_seconds() / 3600
+        deltas.append(duration_hours)
+    
+    if deltas:
+        avg_proc_hrs = round(mean(deltas), 1)
+        avg_proc_days = round(avg_proc_hrs/24, 1)
+
+        avg_time_str = f'{avg_proc_days} дн.'
+    
+    else:
+        avg_time_str = 'N/A'
+
+    processing_time_metric = Metric(
+        html_text=f"Среднее время расчёта:&nbsp;<span class='fw-semibold'>{avg_time_str}</span>",
+        percent=0,
+        css=css_by_metric(0, 'Среднее время расчёта')
     )
 
     # Количество растаможенных грузов 
@@ -383,6 +488,7 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
 
     metrics = [
         requests_metric,
+        processing_time_metric,
         cargo_metric,
         placeholder1,
         placeholder2,
