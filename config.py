@@ -40,11 +40,20 @@ SALES_DEP_ID = 54  # ID  отдела продаж
 SUPPLY_DEP_ID = 15  # ID отдела снабжения 
 
 
+# Все названия стадий уникальны (между разными воронками не пересекаются)
 
 ALL_STAGES = ('NEW', 'UC_O9A0TT', 'UC_WJYSPC', '15', 'PREPARATION', 'UC_Q1P82J', 'UC_3QF7OY', 'UC_Q08ZUN', '17', 'UC_CRI622', '18', 'WON', 'LOSE', 'C20:NEW', 'C20:PREPARATION', 'C20:PREPAYMENT_INVOIC', 'C20:UC_XRMVHI', 'C20:WON', 'C20:LOSE', 'C21:NEW', 'C21:PREPARATION', 'C21:UC_6XX9P7', 'C21:PREPAYMENT_INVOIC', 'C21:EXECUTING', 'C21:FINAL_INVOICE', 'C21:UC_YU26O5', 'C21:UC_KR9EHV', 'C21:UC_78XHX0', 'C21:UC_FOAJK1', 'C21:UC_CAJFEH', 'C21:UC_1A0H14', 'C21:WON', 'C21:LOSE', 'C21:APOLOGY', 'C4:NEW', 'C4:PREPARATION', 'C4:PREPAYMENT_INVOICE', 'C4:EXECUTING', 'C4:FINAL_INVOICE', 'C4:1', 'C4:2', 'C4:3', 'C4:9', 'C4:4', 'C4:5', 'C4:WON', 'C4:LOSE', 'C4:6', 'C4:7', 'C4:8')
+
+# Все стадии всех воронок, на которых КП отправлено 
 KP_SENT_STAGES = ('PREPARATION', 'UC_Q1P82J', 'UC_3QF7OY', 'UC_Q08ZUN', '17', 'UC_CRI622', '18', 'WON', 'LOSE', 'C21:NEW', 'C21:PREPARATION', 'C21:UC_6XX9P7', 'C21:PREPAYMENT_INVOIC', 'C21:EXECUTING', 'C21:FINAL_INVOICE', 'C21:UC_YU26O5', 'C21:UC_KR9EHV', 'C21:UC_78XHX0', 'C21:UC_FOAJK1', 'C21:UC_CAJFEH', 'C21:UC_1A0H14', 'C21:WON', 'C21:LOSE', 'C21:APOLOGY', 'C4:NEW', 'C4:PREPARATION', 'C4:PREPAYMENT_INVOICE', 'C4:EXECUTING', 'C4:FINAL_INVOICE', 'C4:1', 'C4:2', 'C4:3', 'C4:9', 'C4:4', 'C4:5', 'C4:WON', 'C4:LOSE', 'C4:6', 'C4:7', 'C4:8')
+# Все стадии всех воронок, на которых договор заключен (по сути воронка "Исп. договора")
 CONTRACT_STAGES = ('C21:NEW', 'C21:PREPARATION', 'C21:UC_6XX9P7', 'C21:PREPAYMENT_INVOIC', 'C21:EXECUTING', 'C21:FINAL_INVOICE', 'C21:UC_YU26O5', 'C21:UC_KR9EHV', 'C21:UC_78XHX0', 'C21:UC_FOAJK1', 'C21:UC_CAJFEH', 'C21:UC_1A0H14', 'C21:WON', 'C21:LOSE', 'C21:APOLOGY', 'C4:NEW', 'C4:PREPARATION', 'C4:PREPAYMENT_INVOICE', 'C4:EXECUTING', 'C4:FINAL_INVOICE', 'C4:1', 'C4:2', 'C4:3', 'C4:9', 'C4:4', 'C4:5', 'C4:WON', 'C4:LOSE', 'C4:6', 'C4:7', 'C4:8')
-SUPPLY_IN_PROGRESS_STAGES = ('C20:PREPARATION', 'C20:PREPAYMENT_INVOIC', 'C20:UC_XRMVHI', 'C20:WON', 'C20:LOSE')
+
+# Стадии воронки "Снабжение для КП", на которых снабженец считает заявку 
+# Первая стадия "Новый запрос" сюда не входит, т.к. заявки на ней еще не распределены по менеджерам
+SUPPLY_CALCULATION_IN_PROGRESS_STAGES = ('C20:PREPARATION', 'C20:PREPAYMENT_INVOIC', 'C20:UC_XRMVHI', 'C20:WON', 'C20:LOSE')
+
+# Стадии на которых груз растаможен 
 CARGO_CLEARED_STAGES = ('C21:UC_YU26O5', 'C21:UC_KR9EHV', 'C21:UC_78XHX0', 'C21:UC_FOAJK1', 'C21:UC_CAJFEH', 'C21:UC_1A0H14', 'C21:WON', 'C21:LOSE', 'C21:APOLOGY')
 
 STATUS_TYPES = {
@@ -76,7 +85,7 @@ STATUS_TYPES = {
         "name": "Исполнение договора",
       },
       {
-        "id": 4,
+        "id": 4,  # не используется 
         "name": "Снабжение",
       },
       {
