@@ -29,7 +29,8 @@ CREATE TABLE deals (
     stage_semantic_id TEXT,
     opportunity INTEGER,
     profit INTEGER,
-    date_modify TEXT
+    date_modify TEXT,
+    fail_reason TEXT,
 );
 CREATE TABLE kp_files (
     file_id INTEGER PRIMARY KEY,

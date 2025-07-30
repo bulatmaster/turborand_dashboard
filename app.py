@@ -646,7 +646,10 @@ def kps():
             row_color = 'table-primary'
 
         elif deal['stage_semantic_id'] == 'F':  # Fail
-            result = 'Сделка провалена'
+            if deal['fail_reason']:
+                result = deal['fail_reason']
+            else:
+                result = 'Сделка провалена'
             row_color = 'table-danger'
 
         elif deal['stage_id'] == 'PREPARATION':  # КП отправлено 

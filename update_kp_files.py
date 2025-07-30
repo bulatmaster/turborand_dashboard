@@ -13,10 +13,14 @@ import config
 import db 
 
 
+conn = db.get_conn()
 
 mysql_conn   = mysql.connector.connect(**config.MYSQL_CONFIG)
 
-conn = db.get_conn()
+proxy = httpx.Proxy(url=config.HTTP_PROXY_URL)
+openai_client = OpenAI(api_key=config.OPENAI_KEY,
+                http_client=httpx.Client(transport=httpx.HTTPTransport(proxy=proxy)))
+
 
 
 def update_kps():
@@ -131,11 +135,6 @@ def excel_to_json(excel_path):
     return json_path
 
 
-proxy = httpx.Proxy(url=config.HTTP_PROXY_URL)
-client = OpenAI(api_key=config.OPENAI_KEY,
-                http_client=httpx.Client(transport=httpx.HTTPTransport(proxy=proxy)))
-
-
 def summarize(file_path: str) -> str:
     PROMPT = """
         Напиши в одном предложении 
@@ -156,28 +155,28 @@ def summarize(file_path: str) -> str:
     
 
     # 1. Upload Files 
-    file = client.files.create(file=open(file_path, "rb"), purpose="assistants")
+    file = openai_client.files.create(file=open(file_path, "rb"), purpose="assistants")
     attachments = [{"file_id": file.id, "tools": [{"type": "file_search"}]}]
         
     # 2. создаём thread с сообщением‑вложением ------------------------------------
 
-    thread = client.beta.threads.create(messages=[{
+    thread = openai_client.beta.threads.create(messages=[{
         "role": "user",
         "content": PROMPT,
         "attachments": attachments
     }])
 
     # 3. запускаем ассистента ------------------------------------------------------
-    run = client.beta.threads.runs.create(thread_id=thread.id, assistant_id=config.ASST_ID)
+    run = openai_client.beta.threads.runs.create(thread_id=thread.id, assistant_id=config.ASST_ID)
 
     while True:                                    # ждём окончания run
-        run = client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
+        run = openai_client.beta.threads.runs.retrieve(thread_id=thread.id, run_id=run.id)
         if run.status in ("completed", "failed"):
             break
         time.sleep(1)
 
     # 4. получаем последнее сообщение ассистента -----------------------------------
-    reply = client.beta.threads.messages.list(thread_id=thread.id, order="desc").data[0]
+    reply = openai_client.beta.threads.messages.list(thread_id=thread.id, order="desc").data[0]
     result = reply.content[0].text.value
 
     return result
