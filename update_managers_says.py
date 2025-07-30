@@ -24,32 +24,31 @@ openai_client = OpenAI(api_key=config.OPENAI_KEY,
 
 
 def update_managers_says():
-    while True:
-        deals = conn.execute(
-            """
-            SELECT * FROM deals 
-            WHERE stage_semantic_id != "F" 
-            AND managers_says IS NULL 
-            AND date_modify > "2025-07-15"
-            ORDER BY id DESC
-            """
-        ).fetchall()
-        for deal in deals:
-            try:
-                summary = get_summary(deal)
-            except Exception as e:
-                print(f'{e.__class__.__name__}: {e}')
-                summary = 'N/A'
-            
-            if summary in ('N/A', 'не найдено'):
-                summary = ''
+    deals = conn.execute(
+        """
+        SELECT * FROM deals 
+        WHERE stage_semantic_id != "F" 
+        AND managers_says IS NULL 
+        AND date_modify > "2025-07-15"
+        ORDER BY id DESC
+        """
+    ).fetchall()
+    for deal in deals:
+        try:
+            summary = get_summary(deal)
+        except Exception as e:
+            print(f'{e.__class__.__name__}: {e}')
+            summary = 'N/A'
+        
+        if summary in ('N/A', 'не найдено'):
+            summary = ''
 
-            with conn:
-                conn.execute(
-                    """
-                    UPDATE deals SET managers_says = ? WHERE id = ?
-                    """, (summary, deal['id'])
-                )
+        with conn:
+            conn.execute(
+                """
+                UPDATE deals SET managers_says = ? WHERE id = ?
+                """, (summary, deal['id'])
+            )
         
 
 def get_summary(deal: Row):

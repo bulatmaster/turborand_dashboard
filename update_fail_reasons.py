@@ -24,32 +24,31 @@ openai_client = OpenAI(api_key=config.OPENAI_KEY,
 
 
 def update_fail_reasons():
-    while True:
-        deals = conn.execute(
-            """
-            SELECT * FROM deals 
-            WHERE stage_semantic_id = "F" 
-            AND fail_reason IS NULL 
-            AND date_modify > "2025-05"
-            ORDER BY id DESC
-            """
-        ).fetchall()
-        for deal in deals:
-            try:
-                reason = calculate_reason(deal)
-            except Exception as e:
-                print(f'{e.__class__.__name__}: {e}')
-                reason = 'N/A'
-            
-            if reason in ('N/A', 'не найдено'):
-                reason = ''
+    deals = conn.execute(
+        """
+        SELECT * FROM deals 
+        WHERE stage_semantic_id = "F" 
+        AND fail_reason IS NULL 
+        AND date_modify > "2025-05"
+        ORDER BY id DESC
+        """
+    ).fetchall()
+    for deal in deals:
+        try:
+            reason = calculate_reason(deal)
+        except Exception as e:
+            print(f'{e.__class__.__name__}: {e}')
+            reason = 'N/A'
+        
+        if reason in ('N/A', 'не найдено'):
+            reason = ''
 
-            with conn:
-                conn.execute(
-                    """
-                    UPDATE deals SET fail_reason = ? WHERE id = ?
-                    """, (reason, deal['id'])
-                )
+        with conn:
+            conn.execute(
+                """
+                UPDATE deals SET fail_reason = ? WHERE id = ?
+                """, (reason, deal['id'])
+            )
         
 
 def calculate_reason(deal: Row):
