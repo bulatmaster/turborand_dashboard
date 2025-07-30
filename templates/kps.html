@@ -80,8 +80,13 @@ th[aria-sort="descending"]::after { content:"▼"; }
 
   <div class="table-responsive">
 
-  <!-- Фильтр -->
+  <!-- Фильтры -->
+  <div class="pb-2">
   <form method="get" class="d-inline-block">
+    {% if selected_manager %}
+      <input type="hidden" name="manager" value="{{ selected_manager }}">
+    {% endif %}
+
     <select name="filter"
               class="form-select d-inline-block w-auto bg-dark text-custom select-custom"
               onchange="this.form.submit()">
@@ -94,6 +99,22 @@ th[aria-sort="descending"]::after { content:"▼"; }
       <option value="deal_in_progress" {% if selected_filter == "deal_in_progress" %}selected{% endif %}>В процессе</option>
     </select>
   </form>
+
+  <form method="get" class="d-inline-block">
+    {% if selected_filter %}
+      <input type="hidden" name="filter" value="{{ selected_filter }}">
+    {% endif %}
+    <select name="manager"
+              class="form-select d-inline-block w-auto bg-dark text-custom select-custom"
+              onchange="this.form.submit()">
+      <option value="">Все менеджеры</option>
+      {% for m in managers %}
+      <option value={{ m.id }} {% if selected_manager == m.id %}selected{% endif %}>{{ m.name }}</option>
+      {% endfor %}
+    </select>
+  </form>
+
+  </div>
 
     <table class="table table-bordered" id="kp-table">
   <thead>

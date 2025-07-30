@@ -562,10 +562,9 @@ def index():
 @app.route("/kp")
 def kps():
     selected_filter = request.args.get('filter', '')  # '' если ничего не выбрано
+    selected_manager = request.args.get('manager', '')
 
-    if selected_filter == '':
-        where1 = ''
-    elif selected_filter == 'success':
+    if selected_filter == 'success':
         where1 = 'AND deal_id IN (SELECT id FROM deals WHERE pipeline_id = 21)'
     elif selected_filter == 'failed':
         where1 = 'AND deal_id IN (SELECT id FROM deals WHERE stage_semantic_id = "F")'
@@ -583,12 +582,22 @@ def kps():
         AND deal_id NOT IN (SELECT id FROM deals WHERE stage_id = "UC_Q08ZUN")
         AND deal_id NOT IN (SELECT id FROM deals WHERE stage_id IN ("17", "UC_CRI622"))
         """
+    else:
+        where1 = ''
+    
+    where2 = ''
+    selected_manager_safe = None
+    if selected_manager:
+        manager_str_ids = {str(row[0]) for row in conn.execute('SELECT id FROM users').fetchall()}
+        if str(selected_manager) in manager_str_ids:
+            where2 = f'AND deal_id IN (SELECT id FROM deals WHERE sales_user_id = {selected_manager})'
+            selected_manager_safe = int(selected_manager)
 
     files = conn.execute(
         f"""
         SELECT * FROM kp_files 
         WHERE kp_date > "2025-05"
-        {where1}
+        {where1} {where2}
         ORDER BY kp_date DESC 
         """
     ).fetchall()
@@ -754,11 +763,17 @@ def kps():
 
     (last_updated, ) = conn.execute("SELECT value FROM metadata WHERE key = 'last_updated'").fetchone()
 
+    managers = [{'id': m['id'], 'name': m['name']} for m in conn.execute(
+        'SELECT * FROM users WHERE is_sales = 1'
+    ).fetchall()]
+
     return render_template(
         'kps.html',
         kps=kps,
         last_updated=last_updated,
-        selected_filter=selected_filter
+        selected_filter=selected_filter,
+        managers=managers,
+        selected_manager=selected_manager_safe,
     )
 
 
