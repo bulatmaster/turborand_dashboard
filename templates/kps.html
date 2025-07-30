@@ -141,7 +141,7 @@ th[aria-sort="descending"]::after { content:"▼"; }
       <td>{{ kp.summary }}</td>
       <td data-sort="{{ kp.opportunity_raw }}">{{ kp.opportunity | safe }}</td>
       <td data-sort="{{ kp.processing_time_raw }}">{{ kp.processing_time }}</td>
-      <td{% if selected_filter != "" %} data-sort="{{ kp.days_in_stage }}"{% endif %}>{{ kp.result }}</td>
+      <td{% if selected_filter != "" %} data-sort="{{ kp.days_in_stage }}"{% endif %}>{{ kp.result | safe }}</td>
     </tr>
     {% endfor %}
   </tbody>
