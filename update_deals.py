@@ -59,7 +59,8 @@ def update_deals():
                         stage_semantic_id = ?,
                         opportunity = ?,
                         profit = ?,
-                        date_modify = ?
+                        date_modify = ?,
+                        managers_says = NULL
                     WHERE id = ?
                     """, (
                         title,

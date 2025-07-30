@@ -643,6 +643,8 @@ def kps():
 
         elif deal['stage_id'] in ('17', 'UC_CRI622'):
             result = 'Заключаем договор'
+            if deal['managers_says']:
+                result += f'\n\n<b>{deal["managers_says"]}</b>'
             row_color = 'table-primary'
 
         elif deal['stage_semantic_id'] == 'F':  # Fail
@@ -662,6 +664,8 @@ def kps():
             ).fetchone()
             days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(kp_sent_dt)).days
             result = f'КП отправлено ({days_ago} дн.)'
+            if deal['managers_says']:
+                result += f'\n\n<b>{deal["managers_says"]}</b>'
             row_color = 'table-warning' if days_ago >= 7 else 'table-secondary'
 
         elif deal['stage_id'] == 'UC_Q08ZUN':  # Замороженные КП 
@@ -674,6 +678,8 @@ def kps():
             ).fetchone()
             days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(kp_frozen_dt)).days
             result = f'КП заморожено ({days_ago} дн.)'
+            if deal['managers_says']:
+                result += f'\n\n<b>{deal["managers_says"]}</b>'
             row_color = ''
 
         else:
@@ -688,6 +694,8 @@ def kps():
             days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(stage_dt)).days
             stage_name = config.STATUS_IDS[stage_id]
             result = f'{stage_name} ({days_ago} дн.)'
+            if deal['managers_says']:
+                result += f'\n\n\n<b>{deal["managers_says"]}</b>'
             row_color = ''
 
         # Время в стадии (дубль)

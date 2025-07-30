@@ -31,6 +31,7 @@ CREATE TABLE deals (
     profit INTEGER,
     date_modify TEXT,
     fail_reason TEXT,
+    managers_says TEXT
 );
 CREATE TABLE kp_files (
     file_id INTEGER PRIMARY KEY,
