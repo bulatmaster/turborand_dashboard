@@ -73,6 +73,8 @@
 
     <span class="ms-3">Данные обновлены: {{ last_updated }}</span>
 
+    <a href="/kp" class="text-decoration-none">Отправленные КП</a>
+
   <a href="{{ url_for('index', tv='0' if tv_mode else '1') }}"
      class="btn btn-secondary ms-lg-auto">
     {{ "Выключить ТВ режим" if tv_mode else "ТВ режим" }}
