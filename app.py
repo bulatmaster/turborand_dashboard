@@ -561,11 +561,35 @@ def index():
 
 @app.route("/kp")
 def kps():
-    files = conn.execute(
+    selected_filter = request.args.get('filter', '')  # '' если ничего не выбрано
+
+    if selected_filter == '':
+        where1 = ''
+    elif selected_filter == 'success':
+        where1 = 'AND deal_id IN (SELECT id FROM deals WHERE pipeline_id = 21)'
+    elif selected_filter == 'failed':
+        where1 = 'AND deal_id IN (SELECT id FROM deals WHERE stage_semantic_id = "F")'
+    elif selected_filter == 'kp_sent':
+        where1 = 'AND deal_id IN (SELECT id FROM deals WHERE stage_id = "PREPARATION")'
+    elif selected_filter == 'kp_frozen':
+        where1 = 'AND deal_id IN (SELECT id FROM deals WHERE stage_id = "UC_Q08ZUN")'
+    elif selected_filter == 'signing':
+        where1 = 'AND deal_id IN (SELECT id FROM deals WHERE stage_id IN ("17", "UC_CRI622"))'
+    elif selected_filter == 'deal_in_progress':
+        where1 = """
+        AND deal_id NOT IN (SELECT id FROM deals WHERE pipeline_id = 21)
+        AND deal_id NOT IN (SELECT id FROM deals WHERE stage_semantic_id = "F")
+        AND deal_id NOT IN (SELECT id FROM deals WHERE stage_id = "PREPARATION")
+        AND deal_id NOT IN (SELECT id FROM deals WHERE stage_id = "UC_Q08ZUN")
+        AND deal_id NOT IN (SELECT id FROM deals WHERE stage_id IN ("17", "UC_CRI622"))
         """
+
+    files = conn.execute(
+        f"""
         SELECT * FROM kp_files 
         WHERE kp_date > "2025-05"
-        ORDER BY kp_date DESC
+        {where1}
+        ORDER BY kp_date DESC 
         """
     ).fetchall()
 
@@ -616,7 +640,7 @@ def kps():
             result = 'Сделка провалена'
             row_color = 'table-danger'
 
-        elif deal['stage_id'] == 'PREPARATION':
+        elif deal['stage_id'] == 'PREPARATION':  # КП отправлено 
             (kp_sent_dt, ) = conn.execute(
                 f"""
                 SELECT record_time FROM deals_stage_history 
@@ -626,7 +650,7 @@ def kps():
             ).fetchone()
             days_ago = (datetime.now(timezone.utc) - datetime.fromisoformat(kp_sent_dt)).days
             result = f'КП отправлено ({days_ago} дн.)'
-            row_color = 'table-warning' if days_ago >= 7 else ''
+            row_color = 'table-warning' if days_ago >= 7 else 'table-secondary'
 
         elif deal['stage_id'] == 'UC_Q08ZUN':  # Замороженные КП 
             (kp_frozen_dt, ) = conn.execute(
@@ -653,6 +677,17 @@ def kps():
             stage_name = config.STATUS_IDS[stage_id]
             result = f'{stage_name} ({days_ago} дн.)'
             row_color = ''
+
+        # Время в стадии (дубль)
+        stage_id = deal['stage_id']
+        (stage_dt, ) = conn.execute(
+            f"""
+            SELECT record_time FROM deals_stage_history 
+            WHERE deal_id = {deal_id} AND new_stage_id = "{stage_id}"
+            ORDER BY id DESC LIMIT 1
+            """
+        ).fetchone()
+        days_in_stage = (datetime.now(timezone.utc) - datetime.fromisoformat(stage_dt)).days
 
         # Время обработки 
         try:
@@ -713,6 +748,7 @@ def kps():
             'row_color': row_color,
             'processing_time': processing_time,
             'processing_time_raw': processing_time_raw,
+            'days_in_stage': days_in_stage,
         })
 
 
@@ -721,7 +757,8 @@ def kps():
     return render_template(
         'kps.html',
         kps=kps,
-        last_updated=last_updated
+        last_updated=last_updated,
+        selected_filter=selected_filter
     )
 
 

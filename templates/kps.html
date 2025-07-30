@@ -79,6 +79,22 @@ th[aria-sort="descending"]::after { content:"▼"; }
   <section class="mb-5">
 
   <div class="table-responsive">
+
+  <!-- Фильтр -->
+  <form method="get" class="d-inline-block">
+    <select name="filter"
+              class="form-select d-inline-block w-auto bg-dark text-custom select-custom"
+              onchange="this.form.submit()">
+      <option value="">Все сделки</option>
+      <option value="success" {% if selected_filter == "success" %}selected{% endif %}>Договор заключен</option>
+      <option value="failed" {% if selected_filter == "failed" %}selected{% endif %}>Отказ</option>
+      <option value="kp_sent" {% if selected_filter == "kp_sent" %}selected{% endif %}>КП отправлено</option>
+      <option value="kp_frozen" {% if selected_filter == "kp_frozen" %}selected{% endif %}>КП заморожено</option>
+      <option value="signing" {% if selected_filter == "signing" %}selected{% endif %}>Заключаем договор</option>
+      <option value="deal_in_progress" {% if selected_filter == "deal_in_progress" %}selected{% endif %}>В процессе</option>
+    </select>
+  </form>
+
     <table class="table table-bordered" id="kp-table">
   <thead>
     <tr class="table-secondary">
@@ -104,7 +120,7 @@ th[aria-sort="descending"]::after { content:"▼"; }
       <td>{{ kp.summary }}</td>
       <td data-sort="{{ kp.opportunity_raw }}">{{ kp.opportunity | safe }}</td>
       <td data-sort="{{ kp.processing_time_raw }}">{{ kp.processing_time }}</td>
-      <td>{{ kp.result }}</td>
+      <td{% if selected_filter != "" %} data-sort="{{ kp.days_in_stage }}"{% endif %}>{{ kp.result }}</td>
     </tr>
     {% endfor %}
   </tbody>
