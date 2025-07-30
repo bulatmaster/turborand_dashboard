@@ -46,6 +46,19 @@
     }
     .progress-label.badge-style{padding:.15rem .4rem;border-radius:.25rem}
 
+  /* делаем заголовок кликабельным и даём место под стрелку */
+th { cursor:pointer; position:relative; padding-right:2.5rem; }
+
+/* ▲ / ▼ через unicode‑символы */
+th[aria-sort="ascending"]::after,
+th[aria-sort="descending"]::after {
+  position:absolute; right:6px; top:50%; transform:translateY(-50%);
+  font-size:.7rem;
+}
+
+th[aria-sort="ascending"]::after  { content:"▲"; }
+th[aria-sort="descending"]::after { content:"▼"; }
+
   </style>
 </head>
 
@@ -64,9 +77,9 @@
   <section class="mb-5">
 
   <div class="table-responsive">
-    <table class="table table-bordered">
+    <table class="table table-bordered" id="kp-table">
   <thead>
-    <tr>
+    <tr class="table-secondary">
       <th>Дата</th>
       <th>Менеджер</th>
       <th>Сделка</th>
@@ -87,8 +100,8 @@
       <td>{{ kp.deal_type }}</td>
       <td><a href={{ kp.file_url }} data-bx-viewer="true" target="_blank" class="text-decoration-none">{{ kp.file_name }}</a></td>
       <td>{{ kp.summary }}</td>
-      <td>{{ kp.opportunity | safe }}</td>
-      <td>{{ kp.processing_time }}</td>
+      <td data-sort="{{ kp.opportunity_raw }}">{{ kp.opportunity | safe }}</td>
+      <td data-sort="{{ kp.processing_time_raw }}">{{ kp.processing_time }}</td>
       <td>{{ kp.result }}</td>
     </tr>
     {% endfor %}
@@ -103,6 +116,15 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
         crossorigin="anonymous"></script>
 
+<!-- Сортировка таблицы -->   
+<script src="https://cdn.jsdelivr.net/npm/tablesort@5.3.0/dist/tablesort.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/tablesort@5.3.0/dist/sorts/tablesort.number.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    new Tablesort(document.getElementById('kp-table'));
+  });
+</script>
 
 {% if tv_mode %}
 <script>

@@ -561,7 +561,6 @@ def index():
 
 @app.route("/kp")
 def kps():
-    current_datetime = datetime.now(timezone.utc)
     files = conn.execute(
         """
         SELECT * FROM kp_files 
@@ -591,7 +590,8 @@ def kps():
             file_url = ''
 
         # Сумма сделки 
-        opportunity  = deal['opportunity']
+        opportunity_raw  = deal['opportunity']
+        opportunity_formatted  = f'{format_money(opportunity_raw)}&nbsp;₽'
 
         # Тип сделки 
         deal_type = config.STATUS_TYPES[deal['type_id']]
@@ -684,13 +684,16 @@ def kps():
         
             if duration_hours < 72:
                 processing_time = f'{int(duration_hours)} ч.'
+                processing_time_raw = duration_hours
 
             else:
                 duration_days = int(duration_hours/24)
                 processing_time = f'{duration_days} дн.'
+                processing_time_raw = duration_hours 
         
         except Exception:  # не найдена строка в ДБ и т.д.
-            processing_time = 'N/A'
+            processing_time = ''
+            processing_time_raw = None
 
         # Summary 
         summary = file['summary'] if file['summary'] else ''
@@ -704,10 +707,12 @@ def kps():
             'file_name': file_name,
             'file_url': file_url,
             'summary': summary,
-            'opportunity': f'{format_money(opportunity)}&nbsp;₽',
+            'opportunity': opportunity_formatted,
+            'opportunity_raw': opportunity_raw,
             'result': result,
             'row_color': row_color,
             'processing_time': processing_time,
+            'processing_time_raw': processing_time_raw,
         })
 
 
