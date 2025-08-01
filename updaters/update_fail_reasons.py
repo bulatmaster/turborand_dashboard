@@ -1,10 +1,5 @@
 from sqlite3 import Row
-import os
-import time
-import re 
-from dataclasses import dataclass
 
-import pandas as pd
 import mysql.connector
 import httpx 
 from openai import OpenAI
@@ -22,36 +17,41 @@ openai_client = OpenAI(api_key=config.OPENAI_KEY,
                 http_client=httpx.Client(transport=httpx.HTTPTransport(proxy=proxy)))
 
 
+class ChatNotFoundError(Exception):
+    pass 
 
-def update_managers_says():
+
+def update_fail_reasons():
     deals = conn.execute(
         """
         SELECT * FROM deals 
-        WHERE stage_semantic_id != "F" 
-        AND managers_says IS NULL 
-        AND date_modify > "2025-07-15"
+        WHERE stage_semantic_id = "F" 
+        AND fail_reason IS NULL 
+        AND date_modify > "2025-05"
         ORDER BY id DESC
         """
     ).fetchall()
     for deal in deals:
         try:
-            summary = get_summary(deal)
+            reason = calculate_reason(deal)
+        except ChatNotFoundError:  # не найден чат сотрудников  
+            reason = ''  
         except Exception as e:
             print(f'{e.__class__.__name__}: {e}')
-            summary = 'N/A'
+            reason = 'N/A'
         
-        if summary in ('N/A', 'не найдено'):
-            summary = ''
+        if reason in ('N/A', 'не найдено'):
+            reason = ''
 
         with conn:
             conn.execute(
                 """
-                UPDATE deals SET managers_says = ? WHERE id = ?
-                """, (summary, deal['id'])
+                UPDATE deals SET fail_reason = ? WHERE id = ?
+                """, (reason, deal['id'])
             )
         
 
-def get_summary(deal: Row):
+def calculate_reason(deal: Row):
     deal_id = deal['id']
 
     # Get Messages 
@@ -63,7 +63,10 @@ def get_summary(deal: Row):
                 AND (ENTITY_ID = CONCAT('DEAL|', {deal_id}) OR ENTITY_ID = CONCAT('D', {deal_id})
             );
         """)
-        chat_id = cur.fetchone()['ID']
+        row = cur.fetchone()
+        if not row:
+            raise ChatNotFoundError
+        chat_id = row['ID']
         cur.execute(f'SELECT * FROM b_im_message WHERE CHAT_ID = {chat_id}')
         rows = cur.fetchall()
 
@@ -89,7 +92,9 @@ def get_summary(deal: Row):
     user_content = (
         f"""
         Вот история внутреннего чата сотрудников, которые обсуждают сделку в CRM.
-        Верни то, что наши сотрудники говорят об этой сделке (1 короткое предложение)
+        Сделка провалена. 
+        Проанализируй общение сотрудников и попробуй найти причину провала сделки или отказа клиента.
+        Верни ТОЛЬКО причину провала сделки (1 короткое предложение)
         
         ЕСЛИ НЕ НАШЁЛ, верни "не найдено"
 
@@ -99,8 +104,9 @@ def get_summary(deal: Row):
     )
 
     query = [
-        {"role": "system", "content": ("Верни то, что сотрудники говорят о сделке (1 предложение), "
-                                       "проанализировав внутренний чат сотрудинков ")
+        {"role": "system", "content": ("Верни причину провала сделки в 1 предложение, "
+                                       "проанализировав внутренний чат сотрудинков, "
+                                       "обсуждающих эту сделку.")
         },
         {"role": "user",   "content": user_content},
     ]
@@ -110,7 +116,6 @@ def get_summary(deal: Row):
         model="gpt-4.1-mini",
         messages=query,
         temperature=0.1,
-        #max_tokens=300,        
     )
     answer_text = response.choices[0].message.content
 
@@ -118,4 +123,4 @@ def get_summary(deal: Row):
 
 
 if __name__ == '__main__':
-    update_managers_says()
+    update_fail_reasons()

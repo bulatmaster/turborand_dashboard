@@ -9,6 +9,7 @@ import mysql.connector
 import httpx 
 from openai import OpenAI
 
+from utils import emergency_report
 import config 
 import db 
 
@@ -34,6 +35,7 @@ def update_kps():
         try:
             update_kp(kp)
         except Exception as e:
+            emergency_report(f'update_kps: {e.__class__.__name__}: {e}')
             print(f'{e.__class__.__name__}: {e}')
 
 

@@ -3,14 +3,15 @@ import logging
 from datetime import datetime
 from zoneinfo import ZoneInfo  # use pytz if Python < 3.9
 
-from update_calls import update_calls
-from update_deals import update_deals
-from update_payments import update_payments
-from update_stage_history import update_stage_history
-from update_trips import update_trips
-from update_users import update_users 
-from update_trip_expenses import update_trip_expenses
-from update_kp_files import update_kps
+from updaters.update_calls import update_calls
+from updaters.update_deals import update_deals
+from updaters.update_payments import update_payments
+from updaters.update_stage_history import update_stage_history
+from updaters.update_trips import update_trips
+from updaters.update_users import update_users 
+from updaters.update_trip_expenses import update_trip_expenses
+from updaters.update_kp_files import update_kps
+from updaters.update_fail_reasons import update_fail_reasons
 from utils import emergency_report
 
 import db 
@@ -50,7 +51,8 @@ def main():
             update_trips()
             update_last_updated()
             update_trip_expenses()
-            #update_kps()
+            update_kps()
+            update_fail_reasons()
             logging.info('Данные обновлены')
         except Exception as e:
             emergency_report(f'turbodesk updater: {e.__class__.__name__}: {e}')
