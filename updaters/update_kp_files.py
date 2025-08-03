@@ -8,6 +8,7 @@ import pandas as pd
 import mysql.connector
 import httpx 
 from openai import OpenAI
+import paramiko
 
 from utils import emergency_report
 import config 
@@ -59,8 +60,6 @@ def update_kp(kp: Row):
 
             os.remove(file_path)
 
-    except Exception as e:
-        print(f'{e.__class__.__name__}: {e}')
         
     with conn:
         conn.execute(
@@ -107,11 +106,27 @@ def get_file_data(file_id):
     )
     
 
-def copy_file(remote_path, original_name) -> str:
-    os.makedirs('tmp', exist_ok=True)
-    local_path = f'tmp/{original_name}'
-    cmd = f'scp turborand:"{remote_path}" "{local_path}"'
-    os.system(cmd)
+def copy_file(remote_path: str, original_name: str) -> str:
+    # Настройки подключения вручную, т.к. .ssh/config не поддерживается
+    ssh_host = config.MAIN_SERVER_IP                # IP-адрес turborand
+    ssh_user = config.MAIN_SERVER_USER              # Пользователь
+    ssh_key_path = config.SSH_PRIVATE_KEY_PATH   # Приватный ключ
+
+    # Создание локальной папки
+    os.makedirs("tmp", exist_ok=True)
+    local_path = f"tmp/{original_name}"
+
+    # Загрузка файла через SFTP
+    key = paramiko.Ed25519Key.from_private_key_file(ssh_key_path)
+    ssh = paramiko.SSHClient()
+    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh.connect(hostname=ssh_host, username=ssh_user, pkey=key)
+
+    sftp = ssh.open_sftp()
+    sftp.get(remote_path, local_path)
+    sftp.close()
+    ssh.close()
+
     return local_path
 
 

@@ -23,6 +23,12 @@ MYSQL_CONFIG = {
     "autocommit": False,      # будем коммитить сами после каждого батча
 }
 
+# для копирования файлов КП с главного сервера 
+MAIN_SERVER_IP = getenv('MAIN_SERVER_IP')
+MAIN_SERVER_USER = getenv('MAIN_SERVER_USER')
+SSH_PRIVATE_KEY_PATH = os.path.expanduser(getenv('SSH_PRIVATE_KEY_PATH'))  # без passphrase 
+
+
 
 HTTP_PROXY_URL = getenv('HTTP_PROXY_URL')
 OPENAI_KEY  = getenv('OPENAI_KEY')
