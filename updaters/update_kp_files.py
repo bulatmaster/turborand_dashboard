@@ -34,10 +34,9 @@ def update_kps():
     for kp in kps_unprocessed:
         try:
             update_kp(kp)
-        except Exception as e:
-            emergency_report(f'update_kps: {e.__class__.__name__}: {e}')
-            print(f'{e.__class__.__name__}: {e}')
-
+        except mysql.connector.errors.OperationalError as e: 
+            emergency_report(f'update_kps: произошла ошибка {e.__class__.__name__}: {e}, пропускаю обновление КП')
+            return 
 
 def update_kp(kp: Row):
     file_id = kp["file_id"]
