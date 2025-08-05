@@ -49,11 +49,15 @@ def main():
             update_payments()
             update_stage_history()
             update_trips()
-            update_last_updated()
             update_trip_expenses()
-            update_kps()
-            update_fail_reasons()
+
+            update_last_updated()
+
+            update_kps()  # AI 
+            update_fail_reasons()  # AI
+
             logging.info('Данные обновлены')
+
         except Exception as e:
             emergency_report(f'turbodesk updater: {e.__class__.__name__}: {e}')
             logging.exception(e)
