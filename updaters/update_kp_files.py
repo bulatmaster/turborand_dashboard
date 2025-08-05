@@ -50,7 +50,7 @@ def update_kp(kp: Row):
     if str(data.kp_date) > '2025-05':
         file_path = copy_file(data.remote_file_path, data.original_file_name)
 
-        if file_path.endswith('.xlsx') or file_path.endswith('.xls'):
+        if file_path.endswith('.xlsx') or file_path.endswith('.xls')  or file_path.endswith('.xlsm'):
             file_path = excel_to_json(file_path)
 
         summary = summarize(file_path)
