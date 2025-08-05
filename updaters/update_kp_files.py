@@ -8,6 +8,7 @@ import pandas as pd
 import mysql.connector
 import httpx 
 from openai import OpenAI
+import openai 
 import paramiko
 
 from utils import emergency_report
@@ -174,7 +175,17 @@ def summarize(file_path: str) -> str:
     
 
     # 1. Upload Files 
-    file = openai_client.files.create(file=open(file_path, "rb"), purpose="assistants")
+    try:
+        file = openai_client.files.create(file=open(file_path, "rb"), purpose="assistants")
+    except openai.BadRequestError as e:
+        error_data = e.response.json() if e.response else {}
+        error_message = error_data.get("error", {}).get("message", "")
+        if "File is empty" in error_message:
+            return ''
+        else:
+            raise 
+
+
     attachments = [{"file_id": file.id, "tools": [{"type": "file_search"}]}]
         
     # 2. создаём thread с сообщением‑вложением ------------------------------------
