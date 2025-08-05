@@ -173,6 +173,9 @@ def summarize(file_path: str) -> str:
         Если не нашел, верни "" (пустую строку)
     """
     
+    # 0. Validate Files 
+    if file_path.endswith('.jpg'):
+        return ''  # Картинки = фото оборудования и всяких табличек 
 
     # 1. Upload Files 
     try:
