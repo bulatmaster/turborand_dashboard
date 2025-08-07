@@ -55,18 +55,18 @@ def update_kp_summary(kp: Row):
     original_file_name = data.original_file_name
     file_modified_date = str(data.kp_date)
 
-    summary = ''
-    if file_modified_date > OFFSET_DATE:
-        if original_file_name.lower().endswith(('.xlsx', '.xls', '.xlsm')):
-            local_file_path = copy_file(remote_file_path, original_file_name)
-            pdf_path = excel_to_pdf(local_file_path)
-            summary = summarize(pdf_path)
-            os.remove(local_file_path)
-            os.remove(pdf_path)
-        elif original_file_name.lower().endswith(tuple(openai_allowed_extensions)):
-            local_file_path = copy_file(remote_file_path, original_file_name)
-            summary = summarize(local_file_path)
-            os.remove(local_file_path)
+    summary = 'Not Available'
+    #if file_modified_date > OFFSET_DATE:
+    #    if original_file_name.lower().endswith(('.xlsx', '.xls', '.xlsm')):
+    #        local_file_path = copy_file(remote_file_path, original_file_name)
+    #        pdf_path = excel_to_pdf(local_file_path)
+    #        summary = summarize(pdf_path)
+    #        os.remove(local_file_path)
+    #        os.remove(pdf_path)
+    #    elif original_file_name.lower().endswith(tuple(openai_allowed_extensions)):
+    #        local_file_path = copy_file(remote_file_path, original_file_name)
+    #        summary = summarize(local_file_path)
+    #        os.remove(local_file_path)
         
     with conn:
         conn.execute(
@@ -180,6 +180,7 @@ def summarize(file_path: str) -> str:
         (достаточно марки / основного названия модели)
         Если не нашел, верни "" (пустую строку)
     """
+    
 
     # 1. Upload Files 
     try:
@@ -213,14 +214,8 @@ def summarize(file_path: str) -> str:
         time.sleep(1)
 
     # 4. получаем последнее сообщение ассистента -----------------------------------
-    messages = openai_client.beta.threads.messages.list(thread_id=thread.id, order="desc").data
-    reply = next((m for m in messages if m.role == "assistant"), None)
-
-    if not reply:
-        return ''  # Нет ответа от ассистента
-
-    # 5. Очистка от вставленных цитат 
-    result = re.sub(r'【[^【】]+?】', '', result)
+    reply = openai_client.beta.threads.messages.list(thread_id=thread.id, order="desc").data[0]
+    result = reply.content[0].text.value
 
     return result
     
