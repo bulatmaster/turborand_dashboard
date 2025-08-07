@@ -25,44 +25,46 @@ openai_client = OpenAI(api_key=config.OPENAI_KEY,
                 http_client=httpx.Client(transport=httpx.HTTPTransport(proxy=proxy)))
 
 
+openai_allowed_extensions = [
+    ".c", ".cpp", ".cs", ".css", ".doc", ".docx", ".go", ".html", ".java",
+    ".js", ".json", ".md", ".pdf", ".php", ".pptx", ".py", ".rb", ".sh",
+    ".tex", ".ts", ".txt"
+]
+
+OFFSET_DATE = '2025-05'  # Дата, документы раньше которой ничего не делаем 
+
 
 def update_kps():
-    os.makedirs('tmp', exist_ok=True)
-
     kps_unprocessed = conn.execute(
         'SELECT * FROM kp_files WHERE summary IS NULL ORDER BY file_id DESC'
     ).fetchall()
 
     for kp in kps_unprocessed:
         try:
-            update_kp(kp)
+            update_kp_summary(kp)
         except mysql.connector.errors.OperationalError as e: 
             emergency_report(f'update_kps: произошла ошибка {e.__class__.__name__}: {e}, пропускаю обновление КП')
             return 
 
-def update_kp(kp: Row):
+def update_kp_summary(kp: Row):
     file_id = kp["file_id"]
 
-    data = get_file_data(file_id)
+    data: FileData = get_file_data(file_id)
+    remote_file_path = data.remote_file_path
+    original_file_name = data.original_file_name
+    file_modified_date = data.kp_date
 
     summary = None
+    if str(data.kp_date) > OFFSET_DATE:
 
+        local_file_path = copy_file(data.remote_file_path, data.original_file_name)
 
-    if str(data.kp_date) > '2025-05':
-        file_path = copy_file(data.remote_file_path, data.original_file_name)
+        if local_file_path.lower().endswith('.xlsx', '.xls', '.xlsm'):
+            local_file_path = excel_to_json(local_file_path)
 
-        if (file_path.endswith('.xlsx') 
-            or file_path.endswith('.xls')  
-            or file_path.endswith('.xlsm')
-            or file_path.endswith('.XLSX')
-        ):
-            file_path = excel_to_json(file_path)
-
-        summary = summarize(file_path)
+        summary = summarize(local_file_path)
         
-        summary = clear_model_response(summary)
-
-        os.remove(file_path)
+        os.remove(local_file_path)
 
         
     with conn:
@@ -172,10 +174,10 @@ def summarize(file_path: str) -> str:
         (достаточно марки / основного названия модели)
         Если не нашел, верни "" (пустую строку)
     """
-    
+
     # 0. Validate Files 
-    if file_path.endswith('.jpg'):
-        return ''  # Картинки = фото оборудования и всяких табличек 
+    if not file_path.lower().endswith(tuple(openai_allowed_extensions)):
+        return ''
 
     # 1. Upload Files 
     try:
@@ -212,13 +214,11 @@ def summarize(file_path: str) -> str:
     reply = openai_client.beta.threads.messages.list(thread_id=thread.id, order="desc").data[0]
     result = reply.content[0].text.value
 
+    # 5. Очистка от вставленных цитат 
+    result = re.sub(r'【[^【】]+?】', '', result)
+
     return result
     
-
-
-def clear_model_response(text):
-    return re.sub(r'【[^【】]+?】', '', text)
-
 
 if __name__ == '__main__':
     update_kps()
