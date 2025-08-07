@@ -53,24 +53,20 @@ def update_kp_summary(kp: Row):
     data: FileData = get_file_data(file_id)
     remote_file_path = data.remote_file_path
     original_file_name = data.original_file_name
-    file_modified_date = data.kp_date
+    file_modified_date = str(data.kp_date)
 
-    summary = None
-    if (str(data.kp_date) > OFFSET_DATE and 
-        original_file_name.lower().endswith(tuple(openai_allowed_extensions))
-    ):
-      
-        local_file_path = copy_file(data.remote_file_path, data.original_file_name)
-
-        if local_file_path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
-            local_file_path_pdf = excel_to_pdf(local_file_path)
-            summary = summarize(local_file_path_pdf)
+    summary = ''
+    if file_modified_date > OFFSET_DATE:
+        if original_file_name.lower().endswith(('.xlsx', '.xls', '.xlsm')):
+            local_file_path = copy_file(remote_file_path, original_file_name)
+            pdf_path = excel_to_pdf(local_file_path)
+            summary = summarize(pdf_path)
             os.remove(local_file_path)
-            os.remove(local_file_path_pdf)
-        else:
+            os.remove(pdf_path)
+        elif original_file_name.lower().endswith(tuple(openai_allowed_extensions)):
+            local_file_path = copy_file(remote_file_path, original_file_name)
             summary = summarize(local_file_path)
             os.remove(local_file_path)
-        
         
     with conn:
         conn.execute(
