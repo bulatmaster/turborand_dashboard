@@ -3,6 +3,7 @@ import os
 import time
 import re 
 from dataclasses import dataclass
+import subprocess
 
 import pandas as pd
 import mysql.connector
@@ -55,17 +56,21 @@ def update_kp_summary(kp: Row):
     file_modified_date = data.kp_date
 
     summary = None
-    if str(data.kp_date) > OFFSET_DATE:
-
+    if (str(data.kp_date) > OFFSET_DATE and 
+        original_file_name.lower().endswith(tuple(openai_allowed_extensions))
+    ):
+      
         local_file_path = copy_file(data.remote_file_path, data.original_file_name)
 
         if local_file_path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
-            local_file_path = excel_to_json(local_file_path)
-
-        summary = summarize(local_file_path)
+            local_file_path_pdf = excel_to_pdf(local_file_path)
+            summary = summarize(local_file_path_pdf)
+            os.remove(local_file_path)
+            os.remove(local_file_path_pdf)
+        else:
+            summary = summarize(local_file_path)
+            os.remove(local_file_path)
         
-        os.remove(local_file_path)
-
         
     with conn:
         conn.execute(
@@ -136,25 +141,33 @@ def copy_file(remote_path: str, original_name: str) -> str:
     return local_path
 
 
-def excel_to_json(excel_path):
-    # Проверка существования файла
+def excel_to_pdf(excel_path):
     if not os.path.isfile(excel_path):
         raise FileNotFoundError(f"Файл не найден: {excel_path}")
-    
-    # Чтение Excel файла
-    df = pd.read_excel(excel_path)
 
     # Получение имени и директории
-    base_dir = os.path.dirname(excel_path)
+    base_dir = os.path.dirname(os.path.abspath(excel_path))
     base_name = os.path.splitext(os.path.basename(excel_path))[0]
-    json_path = os.path.join(base_dir, f"{base_name}.json")
+    pdf_path = os.path.join(base_dir, f"{base_name}.pdf")
 
-    # Сохранение в JSON
-    df.to_json(json_path, orient='records', force_ascii=False, indent=4)
+    # Команда для конвертации Excel -> PDF
+    command = [
+        'soffice',
+        '--headless',
+        '--convert-to', 'pdf',
+        '--outdir', base_dir,
+        excel_path
+    ]
 
+    try:
+        subprocess.run(command, check=True)
+    except subprocess.CalledProcessError as e:
+        raise RuntimeError(f"Ошибка при конвертации: {e}")
+
+    # Удаляем исходный Excel
     os.remove(excel_path)
 
-    return json_path
+    return pdf_path
 
 
 def summarize(file_path: str) -> str:
@@ -174,10 +187,6 @@ def summarize(file_path: str) -> str:
         (достаточно марки / основного названия модели)
         Если не нашел, верни "" (пустую строку)
     """
-
-    # 0. Validate Files 
-    if not file_path.lower().endswith(tuple(openai_allowed_extensions)):
-        return ''
 
     # 1. Upload Files 
     try:
