@@ -213,8 +213,11 @@ def summarize(file_path: str) -> str:
         time.sleep(1)
 
     # 4. получаем последнее сообщение ассистента -----------------------------------
-    reply = openai_client.beta.threads.messages.list(thread_id=thread.id, order="desc").data[0]
-    result = reply.content[0].text.value
+    messages = openai_client.beta.threads.messages.list(thread_id=thread.id, order="desc").data
+    reply = next((m for m in messages if m.role == "assistant"), None)
+
+    if not reply:
+        return ''  # Нет ответа от ассистента
 
     # 5. Очистка от вставленных цитат 
     result = re.sub(r'【[^【】]+?】', '', result)
