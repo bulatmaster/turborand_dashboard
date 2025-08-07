@@ -148,7 +148,7 @@ def excel_to_pdf(excel_path):
 
     # Команда для конвертации Excel -> PDF
     command = [
-        'soffice',
+        '/usr/bin/soffice',
         '--headless',
         '--convert-to', 'pdf',
         '--outdir', base_dir,
@@ -159,9 +159,6 @@ def excel_to_pdf(excel_path):
         subprocess.run(command, check=True)
     except subprocess.CalledProcessError as e:
         raise RuntimeError(f"Ошибка при конвертации: {e}")
-
-    # Удаляем исходный Excel
-    os.remove(excel_path)
 
     return pdf_path
 
