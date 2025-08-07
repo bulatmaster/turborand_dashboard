@@ -35,10 +35,10 @@ def update_fail_reasons():
         try:
             reason = calculate_reason(deal)
         except ChatNotFoundError:  # не найден чат сотрудников  
-            reason = '' 
+            reason = 'N/A' 
         
         if reason in ('N/A', 'не найдено'):
-            reason = ''
+            reason = 'N/A'
 
         with conn:
             conn.execute(
