@@ -59,7 +59,7 @@ def update_kp_summary(kp: Row):
 
         local_file_path = copy_file(data.remote_file_path, data.original_file_name)
 
-        if local_file_path.lower().endswith('.xlsx', '.xls', '.xlsm'):
+        if local_file_path.lower().endswith(('.xlsx', '.xls', '.xlsm')):
             local_file_path = excel_to_json(local_file_path)
 
         summary = summarize(local_file_path)
