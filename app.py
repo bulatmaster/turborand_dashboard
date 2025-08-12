@@ -546,6 +546,7 @@ def index():
     
     (last_updated, ) = conn.execute("SELECT value FROM metadata WHERE key = 'last_updated'").fetchone()
     
+    refresh_url = '/?tv=1' if tv_mode else '/'
 
     return render_template(
         "index.html",
@@ -555,6 +556,7 @@ def index():
         last_updated=last_updated,
         period_options=period_options,
         selected_period=selected_period,
+        refresh_url=refresh_url
     )
 
 
