@@ -46,11 +46,7 @@ def update_kp_summary(kp: Row):
     file_id = kp["file_id"]
     data: FileData | None = get_file_data(file_id)
 
-    if not data:
-        summary = 'Not Available'    
-
-    else:
-
+    if data:
         remote_file_path = data.remote_file_path
         original_file_name = data.original_file_name
         file_modified_date = str(data.kp_date)
@@ -68,6 +64,12 @@ def update_kp_summary(kp: Row):
         #        local_file_path = copy_file(remote_file_path, original_file_name)
         #        summary = summarize(local_file_path)
         #        os.remove(local_file_path)
+    
+    else:
+        summary = 'Not Available'
+        remote_file_path = None
+        original_file_name = None
+        file_modified_date = None
         
     with conn:
         conn.execute(
@@ -79,7 +81,7 @@ def update_kp_summary(kp: Row):
                 summary = ?
             WHERE file_id = ?
             """, 
-            (data.kp_date, data.original_file_name, data.remote_file_path, summary, file_id)
+            (file_modified_date, original_file_name, remote_file_path, summary, file_id)
         )
 
 
