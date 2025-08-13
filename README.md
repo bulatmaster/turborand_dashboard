@@ -1,91 +1,72 @@
-ДАШБОРД TURBODESK
+# Turborand Dashboard
 
---- СУТЬ ---
-2 процесса 
-1) app.py - flask-приложение (сам дашборд)
-2) updater.py  (обновление данных)
+Веб-приложение на Flask, отображающее ключевые метрики работы отдела продаж и снабжения. Данные периодически выгружаются из CRM и других сервисов, обрабатываются и сохраняются во внутреннюю базу SQLite.
 
+## Структура проекта
+- `app.py` – запуск Flask-приложения и отдача актуальных данных на HTML‑шаблоны.
+- `updater.py` – фоновой процесс, который раз в несколько минут обновляет данные, вызывая скрипты из каталога `updaters/`.
+- `updaters/` – отдельные модули для загрузки пользователей, сделок, платежей, звонков и т.д.
+- `db.py` – работа с внутренней базой SQLite.
+- `init.py` – создание схемы базы из `schema.sql`.
+- `templates/` и `static/` – шаблоны и статические файлы интерфейса.
 
-updater.py представляет собой скрипт, который периодически запускает 
-отдельные скрипты: update_users.py , update_deals.py и т.д. 
+## Требования
+- Python 3.11+
+- Доступ к основному MySQL‑серверу и внешним сервисам CRM
+- Рекомендуется использовать виртуальное окружение и установить зависимости из `requirements.txt`
 
-Эти отдельные скрипты получают данные по API 
-(или иногда напрямую из ДБ),
-как-то их обрабатывают (например прогоняют через API OpenAI)
-и складывают во внутреннюю sqlite базу данных.
+## Установка
+1. **Клонирование репозитория**
+   ```bash
+   git clone https://example.com/turborand_dashboard.git
+   cd turborand_dashboard
+   ```
+2. **Создание окружения и установка зависимостей**
+   ```bash
+   python -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. **Конфигурация**
+   Создайте файл `.env` в корне проекта и укажите параметры подключения. Минимальный набор переменных:
+   ```dotenv
+   MYSQL_HOST=host
+   MYSQL_PORT=3306
+   MYSQL_USER=user
+   MYSQL_PASSWORD=pass
+   MYSQL_DATABASE=db
+   MAIN_SERVER_IP=...
+   MAIN_SERVER_USER=...
+   SSH_PRIVATE_KEY_PATH=~/.ssh/id_rsa
+   HTTP_PROXY_URL=...
+   OPENAI_KEY=...
+   ASST_ID=...
+   EMERGENCY_BOT_TOKEN=...
+   BX_WEBHOOK_URL=...
+   ```
+   Полный список переменных и их назначение можно посмотреть в `config.py`.
+4. **Инициализация базы данных**
+   ```bash
+   python init.py
+   ```
 
+## Запуск
+1. **Обновление данных**
+   ```bash
+   python updater.py
+   ```
+   Скрипт раз в 5 минут загружает данные и обновляет SQLite.
+2. **Веб‑приложение**
+   ```bash
+   python app.py
+   ```
+   В продакшне используйте Gunicorn:
+   ```bash
+   gunicorn --workers 3 --bind 127.0.0.1:8000 wsgi:app
+   ```
+3. **Продакшн**
+   Настройте systemd‑юниты для приложения и обновляющего скрипта, проксирование через Nginx и SSL‑сертификат.
 
-app.py представляет собой flask-приложение, которое забирает актуальные данные
-из внутренней ДБ и отдаёт на html шаблон.
-
-
-
---- ТРЕБОВАНИЯ ---
-VPS сервер с Ubuntu 24.04.
-Конфигурация подойдёт самая простая, типа 1 ГБ RAM, 1 ядро, 10-20 ГБ диск 
-
---- ПОДГОТОВКА К ЗАПУСКУ ---
-1. Клонировать репозиторий на сервер
-
-2. установить зависимости  (лучше внутри виртуального окружения (venv))
-pip install -r requirements.txt 
-
-3. создать .env файл в корне проекта, прописать туда данные согласно config.py
-(то что запрашивается через getenv('SOME_PARAMETER'))
-
-4. Инициировать sqlite базу данных 
-python init.py 
-
---- ТЕСТОВЫЙ ЗАПУСК ---
-
-1. запустить updater.py 
-
-2. запустить app.py  - дашборд будет открываться 
-
---- ПРОДАКШН ЗАПУСК --- 
-
-1. Создать и запустить systemd-юнит, который будет отвечать за сам дашборд 
-(запускать app.py через Gunicorn)
-
-Пример юнита:
-
-[Unit]
-Description=TURBORAND DASHBOARD
-After=network.target
-
-[Service]
-User=turborand
-Group=turborand
-WorkingDirectory=/home/turborand/turborand_dashboard
-ExecStart=/home/turborand/turborand_dashboard/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 wsgi:app
-Environment="PATH=/home/turborand/turborand/venv/bin"
-
-[Install]
-WantedBy=multi-user.target
-
-
-2. Создать и запустить systemd-юнит, который будет отвечать за updater.py 
-
-Пример юнита:
-
-[Unit]
-Description=TURBORAND DASHBOARD
-After=network.target
-
-[Service]
-User=turborand
-Group=turborand
-WorkingDirectory=/home/turborand/turborand_dashboard
-ExecStart=/home/turborand/turborand_dashboard/venv/bin/python3 updater.py
-Environment="PATH=/home/turborand/turborand/venv/bin"
-StandardOutput=append:/home/turborand/turborand_dashboard/logs/updater.log
-StandardError=inherit
-
-[Install]
-WantedBy=multi-user.target
-
-
-3. Настроить nginx, чтобы пересылал запросы к Gunicorn 
-
-4. Получить SSL-сертификат через certbot 
+## Лицензия
+Проект распространяется без явной лицензии.
 
