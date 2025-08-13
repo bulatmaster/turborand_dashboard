@@ -19,20 +19,18 @@ import db
 
 conn = db.get_conn()
 
-mysql_conn   = mysql.connector.connect(**config.MYSQL_CONFIG)
-
 proxy = httpx.Proxy(url=config.HTTP_PROXY_URL)
 openai_client = OpenAI(api_key=config.OPENAI_KEY,
                 http_client=httpx.Client(transport=httpx.HTTPTransport(proxy=proxy)))
 
 
-openai_allowed_extensions = [
+OPENAI_ALLOWED_EXTENSIONS = [
     ".c", ".cpp", ".cs", ".css", ".doc", ".docx", ".go", ".html", ".java",
     ".js", ".json", ".md", ".pdf", ".php", ".pptx", ".py", ".rb", ".sh",
     ".tex", ".ts", ".txt"
 ]
 
-OFFSET_DATE = '2025-05'  # Дата, документы раньше которой ничего не делаем 
+OFFSET_DATE = '2025-05'  # Дата, с которой начинаем обрабатывать документы 
 
 
 def update_kps():
@@ -41,32 +39,35 @@ def update_kps():
     ).fetchall()
 
     for kp in kps_unprocessed:
-        try:
-            update_kp_summary(kp)
-        except mysql.connector.errors.OperationalError as e: 
-            emergency_report(f'update_kps: произошла ошибка {e.__class__.__name__}: {e}, пропускаю обновление КП')
-            return 
+        update_kp_summary(kp)
+
 
 def update_kp_summary(kp: Row):
     file_id = kp["file_id"]
+    data: FileData | None = get_file_data(file_id)
 
-    data: FileData = get_file_data(file_id)
-    remote_file_path = data.remote_file_path
-    original_file_name = data.original_file_name
-    file_modified_date = str(data.kp_date)
+    if not data:
+        summary = 'Not Available'    
 
-    summary = 'Not Available'
-    #if file_modified_date > OFFSET_DATE:
-    #    if original_file_name.lower().endswith(('.xlsx', '.xls', '.xlsm')):
-    #        local_file_path = copy_file(remote_file_path, original_file_name)
-    #        pdf_path = excel_to_pdf(local_file_path)
-    #        summary = summarize(pdf_path)
-    #        os.remove(local_file_path)
-    #        os.remove(pdf_path)
-    #    elif original_file_name.lower().endswith(tuple(openai_allowed_extensions)):
-    #        local_file_path = copy_file(remote_file_path, original_file_name)
-    #        summary = summarize(local_file_path)
-    #        os.remove(local_file_path)
+    else:
+
+        remote_file_path = data.remote_file_path
+        original_file_name = data.original_file_name
+        file_modified_date = str(data.kp_date)
+
+        summary = 'Not Available'
+
+        #if file_modified_date > OFFSET_DATE:
+        #    if original_file_name.lower().endswith(('.xlsx', '.xls', '.xlsm')):
+        #        local_file_path = copy_file(remote_file_path, original_file_name)
+        #        pdf_path = excel_to_pdf(local_file_path)
+        #        summary = summarize(pdf_path)
+        #        os.remove(local_file_path)
+        #        os.remove(pdf_path)
+        #    elif original_file_name.lower().endswith(tuple(openai_allowed_extensions)):
+        #        local_file_path = copy_file(remote_file_path, original_file_name)
+        #        summary = summarize(local_file_path)
+        #        os.remove(local_file_path)
         
     with conn:
         conn.execute(
@@ -89,13 +90,14 @@ class FileData:
     remote_file_path: str
     
 
-def get_file_data(file_id):
+def get_file_data(file_id) -> FileData | None:
     """
     Получает данные о файле с MySQL
     """
-    with mysql_conn.cursor(dictionary=True) as cur:
-        cur.execute(f'SELECT * FROM b_file WHERE ID = {file_id}')
-        row = cur.fetchone()
+    with mysql.connector.connect(**config.MYSQL_CONFIG) as mysql_conn:
+        with mysql_conn.cursor(dictionary=True) as cur:
+            cur.execute(f'SELECT * FROM b_file WHERE ID = {file_id}')
+            row = cur.fetchone()
 
     if not row:
         return None 
