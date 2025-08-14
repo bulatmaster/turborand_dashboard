@@ -10,8 +10,6 @@ import db
 
 conn = db.get_conn()
 
-mysql_conn   = mysql.connector.connect(**config.MYSQL_CONFIG)
-
 proxy = httpx.Proxy(url=config.HTTP_PROXY_URL)
 openai_client = OpenAI(api_key=config.OPENAI_KEY,
                 http_client=httpx.Client(transport=httpx.HTTPTransport(proxy=proxy)))
@@ -52,20 +50,21 @@ def calculate_reason(deal: Row):
     deal_id = deal['id']
 
     # Get Messages 
-    with mysql_conn.cursor(dictionary=True) as cur:
-        cur.execute(f"""
-            SELECT ID
-            FROM b_im_chat
-            WHERE ENTITY_TYPE = 'CRM'
-                AND (ENTITY_ID = CONCAT('DEAL|', {deal_id}) OR ENTITY_ID = CONCAT('D', {deal_id})
-            );
-        """)
-        row = cur.fetchone()
-        if not row:
-            raise ChatNotFoundError
-        chat_id = row['ID']
-        cur.execute(f'SELECT * FROM b_im_message WHERE CHAT_ID = {chat_id}')
-        rows = cur.fetchall()
+    with mysql.connector.connect(**config.MYSQL_CONFIG) as mysql_conn:
+        with mysql_conn.cursor(dictionary=True) as cur:
+            cur.execute(f"""
+                SELECT ID
+                FROM b_im_chat
+                WHERE ENTITY_TYPE = 'CRM'
+                    AND (ENTITY_ID = CONCAT('DEAL|', {deal_id}) OR ENTITY_ID = CONCAT('D', {deal_id})
+                );
+            """)
+            row = cur.fetchone()
+            if not row:
+                raise ChatNotFoundError
+            chat_id = row['ID']
+            cur.execute(f'SELECT * FROM b_im_message WHERE CHAT_ID = {chat_id}')
+            rows = cur.fetchall()
 
     messages_text = ''
     for row in rows:
