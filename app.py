@@ -334,16 +334,12 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
     profit = 0
     for deal_id in contract_deal_ids:
         deal = conn.execute('SELECT * FROM deals WHERE id = ?', (deal_id,)).fetchone()
-        
         if not deal['opportunity']:  # пропускаем незаполненные сделки
             continue 
-
         cost = deal['opportunity'] - deal['profit'] if deal['profit'] else deal['opportunity']
-
         payments_sum = conn.execute(
             f'SELECT SUM(amount) FROM payments WHERE deal_id = {deal_id}'
         ).fetchone()[0] or 0
-
         profit += max(payments_sum - cost, 0)
 
     profit_percent = safe_percent(profit, PLANS["Прибыль"][position])
