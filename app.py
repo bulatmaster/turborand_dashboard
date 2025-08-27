@@ -457,6 +457,19 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
         css=css_by_metric(0, 'Среднее время расчёта')
     )
 
+    (request_in_progress, ) = conn.execute(
+        f"""
+        SELECT COUNT(*) FROM deals 
+        WHERE supply_user_id = {user_id}
+        AND stage_id = "C20:PREPAYMENT_INVOIC"
+        """
+    ).fetchone()
+    request_in_processing_metric = Metric(
+        html_text=f"Заявок в работе:&nbsp;<span class='fw-semibold'>{request_in_progress}</span>",
+        percent=0,
+        css=css_by_metric(0, 'Заявок в работе')
+    )
+
     # Количество растаможенных грузов 
     (cleared_cargo, ) = conn.execute(
         f"""
@@ -492,6 +505,7 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
     metrics = [
         requests_metric,
         processing_time_metric,
+        request_in_processing_metric,
         cargo_metric,
         placeholder1,
         placeholder2,
