@@ -330,16 +330,28 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
     )    
 
 
-    # Прибыль = сумма входящих платежей минус себестоимость для заключенных сделок за период 
-    (profit, ) = conn.execute(
-        f"""
-        SELECT SUM(amount) FROM payments 
+    # Прибыль = сумма платежей по сделкам менеджера за период за вычетом себестоимости 
+    profit = 0 
+    payments = conn.execute(
+        """
+        SELECT * FROM payments 
         WHERE payment_time BETWEEN ? AND ?
         AND deal_id IN (SELECT id FROM deals WHERE sales_user_id = ?)
         """, (start_date, end_date, user_id)
-    ).fetchone()
-    if not profit:
-        profit = 0
+    ).fetchall()
+    for payment in payments:
+        deal = conn.execute('SELECT * FROM deals WHERE id = ?', (payment['deal_id'],)).fetchone()
+        cost = deal['opportunity'] - deal['profit'] if deal['profit'] else 0
+        prev_payments = conn.execute(
+            'SELECT * FROM payments WHERE deal_id = ? AND id < ?',
+            (deal_id, payment['id'])
+        ).fetchall()
+        for prev_payment in prev_payments:
+            cost -= prev_payment['amount']
+        cost = max(cost, 0)
+
+        profit += (payment['amount'] - cost)
+        
 
     profit_percent = safe_percent(profit, PLANS["Прибыль"][position])
     profit_metric = Metric(
