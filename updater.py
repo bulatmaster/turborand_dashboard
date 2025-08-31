@@ -53,8 +53,8 @@ def main():
 
             update_last_updated()
 
-            update_kps()  # AI 
-            update_fail_reasons()  # AI
+            update_kps()  # КП файлы и их саммари (саммари отключены)
+            update_fail_reasons()  # причины провала сделок 
 
             logging.info('Данные обновлены')
 

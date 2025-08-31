@@ -125,7 +125,6 @@ th[aria-sort="descending"]::after { content:"▼"; }
         <th>Тип сделки</th>
         <th>Сумма сделки</th>
         <th>Файл КП</th>
-        <th>Суть КП</th>
         <th>Время подготовки КП</th>
         <th>Результат</th>
       </tr>
@@ -139,7 +138,6 @@ th[aria-sort="descending"]::after { content:"▼"; }
         <td>{{ kp.deal_type }}</td>
         <td data-sort="{{ kp.opportunity_raw }}">{{ kp.opportunity | safe }}</td>
         <td><a href={{ kp.file_url }} data-bx-viewer="true" target="_blank" class="text-decoration-none">{{ kp.file_name }}</a></td>
-        <td>{{ kp.summary }}</td>
         <td data-sort="{{ kp.processing_time_raw }}">{{ kp.processing_time }}</td>
         <td{% if selected_filter != "" %} data-sort="{{ kp.days_in_stage }}"{% endif %}>{{ kp.result | safe }}</td>
       </tr>

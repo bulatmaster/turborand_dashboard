@@ -34,9 +34,6 @@ def update_fail_reasons():
             reason = calculate_reason(deal)
         except ChatNotFoundError:  # не найден чат сотрудников  
             reason = 'N/A' 
-        
-        if reason in ('N/A', 'не найдено'):
-            reason = 'N/A'
 
         with conn:
             conn.execute(
@@ -106,7 +103,6 @@ def calculate_reason(deal: Row):
         },
         {"role": "user",   "content": user_content},
     ]
-
 
     response = openai_client.chat.completions.create(
         model="gpt-4.1-mini",
