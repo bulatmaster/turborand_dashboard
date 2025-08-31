@@ -677,7 +677,9 @@ def kps():
 
         elif deal['stage_semantic_id'] == 'F':  # Fail
             if deal['fail_reason']:
-                result = f"<b>{deal['fail_reason']}</b>"
+                result = f"{deal['fail_reason']}"
+                if deal['fail_reason'] not in ('N/A', 'не найдено'):
+                    result = f'<b>{result}</b>'
             else:
                 result = 'Сделка провалена'
             row_color = 'table-danger'
