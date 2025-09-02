@@ -85,7 +85,7 @@
 
   <!-- ===== Продажи ===== -->
   <section class="mb-5">
-    <h3 class="mb-4 text-bolder">Продажи</h3>
+    <h3 class="mb-4 text-bolder">Сотрудники</h3>
 
     {% if tv_mode %}
     <div class="row row-cols-6 g-4">
@@ -93,55 +93,41 @@
     <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-6 g-4">
     {% endif %}
 
-      {% for m in sales %}
-      <div class="col">
-        <div class="card h-100 shadow-sm p-3 bg-light">
+    {% for m in sales %}
+    <div class="col">
+      <div class="card h-100 shadow-sm p-3 bg-light">
 
-          <div class="d-flex">
-            <img src="{{ m.photo_url }}" alt="{{ m.name }}"
-                 class="rounded me-3" 
-                 {% if tv_mode %}
-                 style="width:160px;height:160px;object-fit:cover">
-                 {% else %}
-                 style="width:110px;height:110px;object-fit:cover">
-                 {% endif %}
-            <div class="flex-grow-1">
-              <h5 class="mb-1">{{ m.name }}</h5>
-              <p class="text-muted mb-2 small">{{ m.position }}</p>
-            </div>
+        <div class="d-flex">
+          <img src="{{ m.photo_url }}" alt="{{ m.name }}"
+                class="rounded me-3" 
+                {% if tv_mode %}
+                style="width:160px;height:160px;object-fit:cover">
+                {% else %}
+                style="width:110px;height:110px;object-fit:cover">
+                {% endif %}
+          <div class="flex-grow-1">
+            <h5 class="mb-1">{{ m.name }}</h5>
+            <p class="text-muted mb-2 small">{{ m.position }}</p>
           </div>
-
-          <hr class="my-2">
-
-          {% for metric in m.metrics %}
-          <div class="mb-2">
-            <div class="progress">
-              <div class="progress-bar {{ metric.css }}"
-                   style="width: {{ metric.percent }}%;">
-                <span class="progress-label badge-style">{{ metric.html_text|safe }}</span>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
         </div>
+
+        <hr class="my-2">
+
+        {% for metric in m.metrics %}
+        <div class="mb-2">
+          <div class="progress">
+            <div class="progress-bar {{ metric.css }}"
+                  style="width: {{ metric.percent }}%;">
+              <span class="progress-label badge-style">{{ metric.html_text|safe }}</span>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
       </div>
-      {% endfor %}
     </div>
-  </section>
+    {% endfor %}
 
-  <hr>
-
-  <!-- ===== Снабжение ===== -->
-  <section class="mb-5">
-    <h3 class="mb-4 text-bolder">Снабжение</h3>
-
-    {% if tv_mode %}
-    <div class="row row-cols-6 g-4">
-    {% else %}
-    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-6 g-4">
-    {% endif %}
-
-      {% for m in supplies %}
+    {% for m in supplies %}
       <div class="col">
         <div class="card h-100 shadow-sm p-3 bg-light">
 
