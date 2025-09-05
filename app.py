@@ -340,6 +340,9 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         """, (start_date, end_date, user_id)
     ).fetchall()
     for payment in payments:
+        if not payment['amount']:
+            continue 
+
         deal = conn.execute('SELECT * FROM deals WHERE id = ?', (payment['deal_id'],)).fetchone()
         cost = deal['opportunity'] - deal['profit'] if deal['profit'] else 0
         prev_payments = conn.execute(
