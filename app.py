@@ -77,6 +77,13 @@ def css_by_metric(label: str, value: int | float) -> str:
         if value < 40: return "bg-danger"
         if value < 70: return "bg-warning"
         return "bg-success"
+
+    if label == "ФОТ":
+        if value < 20: return "bg-secondary"
+        if value < 40: return "bg-danger"
+        if value < 70: return "bg-warning"
+        return "bg-success"
+
     
     ### Снабжение
     if label == "Заявки":
@@ -206,9 +213,11 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
     else:
         expenses_str = ''
 
+    trips_percent = safe_percent(trips, PLANS['Командировки'])
+
     trips_metric = Metric(
         html_text=f"Командировки:&nbsp;<span class='fw-semibold'>{trips}</span>{expenses_str}",
-        percent=safe_percent(trips, PLANS['Командировки']),
+        percent=trips_percent,
         css=css_by_metric('Командировки', trips)
     )
 
@@ -305,12 +314,12 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         """, 
     ).fetchall()}
     contracts = len(contract_deal_ids)
+    contracts_percent = safe_percent(contracts, PLANS["Договоры"])
     contracts_metric = Metric(
         html_text=f"Договоры:&nbsp;<span class='fw-semibold'>{contracts}</span>",
-        percent=safe_percent(contracts, PLANS["Договоры"]),
+        percent=contracts_percent,
         css=css_by_metric('Договоры', contracts)
     )
-
 
     # Авансы 
     (advances, ) = conn.execute(
@@ -323,9 +332,10 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
     ).fetchone()
     if not advances:
         advances = 0
+    advances_percent = safe_percent(advances, PLANS["Авансы"])
     advances_metric = Metric(
         html_text=f"Авансы:&nbsp;<span class='fw-semibold'>{format_money(advances)}</span>&nbsp;₽",
-        percent=safe_percent(advances, PLANS["Авансы"]),
+        percent=advances_percent,
         css=css_by_metric('Авансы', advances)
     )    
 
@@ -363,6 +373,17 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         css=css_by_metric('Прибыль', profit_percent)
     ) 
 
+    fot = int(
+        advances_percent * 0.6  # impact 60%
+        + contracts_percent * 0.2  # impact 20%
+        + trips_percent * 0.2  # impact 20% 
+    )
+    fot_metric = Metric(
+        html_text=f"ФОТ:&nbsp;<span class='fw-semibold'>{fot}%</span>&nbsp;",
+        percent=fot,
+        css=css_by_metric('ФОТ', fot)
+    )
+
     metrics = [
         kp_metric,
         calls_metric,
@@ -372,6 +393,7 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         contracts_metric,
         advances_metric,
         profit_metric,
+        fot_metric,
     ]
 
     return ManagerInfo(
