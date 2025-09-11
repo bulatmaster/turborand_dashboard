@@ -357,9 +357,11 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
         cost = deal['opportunity'] - deal['profit'] if deal['profit'] else 0
         prev_payments = conn.execute(
             'SELECT * FROM payments WHERE deal_id = ? AND id < ?',
-            (deal_id, payment['id'])
+            (deal['id'], payment['id'])
         ).fetchall()
         for prev_payment in prev_payments:
+            if not prev_payment['amount']:
+                continue
             cost -= prev_payment['amount']
         cost = max(cost, 0)
 
