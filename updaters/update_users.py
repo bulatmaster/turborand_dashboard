@@ -27,6 +27,8 @@ def update_users():
 
         if user_id == 1:  # Робот Турборэнд
             continue 
+        if user_id == 55:  # test user 
+            continue 
 
 
         name = user['NAME']
