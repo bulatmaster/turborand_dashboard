@@ -595,13 +595,15 @@ def index():
 
     sales = [build_manager_data(r, avatar, start_date, end_date) for r
                 in conn.execute("SELECT * FROM users WHERE is_sales = 1").fetchall()]
-    
+
     supplies = [build_supply_data(r, avatar, start_date, end_date) for r
                 in conn.execute("SELECT * FROM users WHERE is_supply = 1").fetchall()]
     
     (last_updated, ) = conn.execute("SELECT value FROM metadata WHERE key = 'last_updated'").fetchone()
     
     refresh_url = '/?tv=1' if tv_mode else '/'
+
+    split_flag = len(sales) <= 12  
 
     return render_template(
         "index.html",
@@ -611,7 +613,8 @@ def index():
         last_updated=last_updated,
         period_options=period_options,
         selected_period=selected_period,
-        refresh_url=refresh_url
+        refresh_url=refresh_url,
+        split_flag=split_flag,
     )
 
 

@@ -83,9 +83,8 @@
 
   <hr>
 
-  <!-- ===== Продажи ===== -->
   <section class="mb-5">
-    <h3 class="mb-4 text-bolder">Сотрудники</h3>
+    <h3 class="mb-4 text-bolder">{% if split_flag %}Продажи{% else %}Сотрудники{% endif %}</h3>
 
     {% if tv_mode %}
     <div class="row row-cols-6 g-4">
@@ -126,6 +125,21 @@
       </div>
     </div>
     {% endfor %}
+    
+    {% if split_flag %}
+
+  </div>
+</section>
+<section class="mb-5">
+  <h3 class="mb-4 text-bolder">Снабжение</h3>
+
+    {% if tv_mode %}
+    <div class="row row-cols-6 g-4">
+    {% else %}
+    <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-4 row-cols-xxl-4 g-4">
+    {% endif %}
+
+    {% endif %}
 
     {% for m in supplies %}
       <div class="col">

@@ -1,5 +1,5 @@
 import sqlite3 
-import requests 
+import requests
 import logging
 
 import config 
