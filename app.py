@@ -28,6 +28,7 @@ PLANS = {
     "Командировки": 10,
     "Договоры": 5,
     "Авансы": 4_000_000,
+    "Выручка": 4_000_000,
     "Прибыль": {
         "Стажер": 250_000,
         "Младший менеджер": 850_000,
@@ -66,6 +67,12 @@ def css_by_metric(label: str, value: int | float) -> str:
         if value < 3_000_000:   return "bg-warning"
         return "bg-success"
 
+    if label == "Выручка":
+        if value < 20:  return "bg-secondary"
+        if value < 40:  return "bg-danger"
+        if value < 80:  return "bg-warning"
+        return "bg-success"
+    
     if label == "Прибыль":  # проценты от плана
         if value < 20:  return "bg-secondary"
         if value < 40:  return "bg-danger"
@@ -380,6 +387,22 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str,
 
         profit += (payment['amount'] - cost)
         
+    (revenue, ) = conn.execute(
+        """
+        SELECT SUM(amount) FROM payments 
+        WHERE payment_time BETWEEN ? AND ?
+        AND deal_id IN (SELECT id FROM deals WHERE sales_user_id = ?)
+        AND payment_type != "Аванс"
+        """, (start_date, end_date, user_id)
+    ).fetchone()
+    if not revenue: 
+        revenue = 0
+    revenue_percent = safe_percent(revenue, PLANS['Выручка'])
+    revenue_metric = Metric(
+        html_text=f"Выручка:&nbsp;<span class='fw-semibold'>{format_money(revenue)}</span>&nbsp;₽",
+        percent=revenue_percent,
+        css=css_by_metric('Выручка', revenue_percent)
+    )
 
     profit_percent = safe_percent(profit, PLANS["Прибыль"][position])
     profit_metric = Metric(
@@ -407,6 +430,7 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str,
         supply_processing_time_metric if not is_intern else None,
         contracts_metric,
         advances_metric,
+        revenue_metric if not is_intern else None,
         profit_metric if not is_intern else None,
         fot_metric if not is_intern else None,
     ]
