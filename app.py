@@ -110,7 +110,7 @@ class Metric:
 @dataclass
 class ManagerInfo:
     name: str 
-    position: str 
+    display_position: str 
     photo_url: str
     metrics: Metric
 
@@ -126,27 +126,40 @@ def format_money(val: int | float) -> str:
     return f"{int(val):,}".replace(",", "&nbsp;")
 
 
-def get_manager_position(start_date_str):
+def get_manager_position(start_date_str, show_days: bool = False):
     start_date = datetime.fromisoformat(start_date_str)
     now = datetime.now(timezone.utc)
     months_passed = (now.year - start_date.year) * 12 + now.month - start_date.month
 
     if months_passed < 4:
-        return "Стажер"
+        position = "Стажер"
     elif months_passed < 7:
-        return "Младший менеджер"
+        position = "Младший менеджер"
     elif months_passed <= 12:
-        return "Менеджер по продажам"
+        position = "Менеджер по продажам"
     else:
-        return "Ведущий менеджер по продажам"
+        position = "Ведущий менеджер по продажам"
+
+    start_date = datetime.fromisoformat(start_date_str)
+    formatted_date = start_date.strftime("%d.%m")
+
+    display_position = (
+        position 
+        if not show_days 
+        else f"В компании с {formatted_date}"
+    )
+
+
+    return (position, display_position)
 
 
 # ─── данные менеджеров ───────────────────────────────────────────────────────
-def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, end_date: str) -> ManagerInfo:
+def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
+                       end_date: str, is_intern: bool = False) -> ManagerInfo:
     user_id = user['id']
 
     # Категория менеджера (стажёр, младший менеджер и тд) (влияет на план по прибыли)
-    position = get_manager_position(user['date_register'])
+    position, display_position = get_manager_position(user['date_register'], show_days=is_intern)
 
     # Отправлено КП 
     (kp, ) = conn.execute(
@@ -389,18 +402,19 @@ def build_manager_data(user: sqlite3.Row, default_avatar: str, start_date: str, 
     metrics = [
         kp_metric,
         calls_metric,
-        trips_metric,
+        trips_metric if not is_intern else None,
         supply_requests_metric,
-        supply_processing_time_metric,
+        supply_processing_time_metric if not is_intern else None,
         contracts_metric,
         advances_metric,
-        profit_metric,
-        fot_metric,
+        profit_metric if not is_intern else None,
+        fot_metric if not is_intern else None,
     ]
+    metrics = [m for m in metrics if m is not None]
 
     return ManagerInfo(
         name=user["name"],
-        position=position,
+        display_position=display_position,
         photo_url=user["photo_url"] or default_avatar,
         metrics=metrics,
     )
@@ -552,7 +566,7 @@ def build_supply_data(user: sqlite3.Row,  default_avatar: str, start_date: str,
 
     return ManagerInfo(
         name=user["name"],
-        position=position,
+        display_position=position,
         photo_url=user["photo_url"] or default_avatar,
         metrics=metrics,
     )
@@ -593,8 +607,26 @@ def index():
 
     avatar = url_for("static", filename="default_avatar.jpg")
 
-    sales = [build_manager_data(r, avatar, start_date, end_date) for r
-                in conn.execute("SELECT * FROM users WHERE is_sales = 1").fetchall()]
+    sales = [
+        build_manager_data(r, avatar, start_date, end_date)
+        for r in conn.execute(
+            """
+            SELECT * FROM users
+            WHERE is_sales = 1
+            AND datetime(date_register) < datetime('now', '-7 days')
+            """
+        ).fetchall()
+    ]
+    interns = [
+        build_manager_data(r, avatar, start_date, end_date, is_intern=True)
+        for r in conn.execute(
+            """
+            SELECT * FROM users
+            WHERE is_sales = 1
+            AND datetime(date_register) > datetime('now', '-7 days')
+            """
+        ).fetchall()
+    ]
 
     supplies = [build_supply_data(r, avatar, start_date, end_date) for r
                 in conn.execute("SELECT * FROM users WHERE is_supply = 1").fetchall()]
@@ -608,6 +640,7 @@ def index():
     return render_template(
         "index.html",
         sales=sales,
+        interns=interns,
         supplies=supplies,
         tv_mode=tv_mode,
         last_updated=last_updated,
